@@ -12,11 +12,62 @@
     <script src="https://code.jquery.com/jquery.min.js"></script>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+    <!-- react.js -->
+    <script src="https://fb.me/react-0.14.0.js"></script>
+    <script src="https://fb.me/react-dom-0.14.0.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+
+    <!-- Bootbox -->
+     <script src="assets/js/bootbox.min.js"></script>
+
+    <!-- Parse -->
+    <script src="//www.parsecdn.com/js/parse-1.6.0.min.js"></script>
     
     <!-- Custom files -->
-    <script type="text/javascript" src="js/river.js"></script>
-    <link rel="stylesheet" href="css/river.css"/>
+    <script type="text/javascript" src="assets/js/river.js"></script>
+    <link rel="stylesheet" href="assets/css/river.css"/>
   </head>
   <body>
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <a class="navbar-brand" href="./">River</a>
+        <ul class="nav navbar-nav pull-left">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Products <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="./#/product/1">Product 1</a></li>
+              <li><a href="./#/product/2">Product 2</a></li>
+              <li><a href="./#/product/3">Product 3</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a href="./#/product/4">Product 4</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a href="./#/product/5">Product 5</a></li>
+            </ul>
+          </li>
+          <li>
+            <form class="navbar-form" action="./" id="searchForm">
+              <input type="text" name="search" id="search" class="form-control" placeholder="Search Products">
+              <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+            </form>
+          </li>
+        </ul>
+        <ul class="nav navbar-nav pull-right">
+          <li>
+            <a href="#">My Account</a>
+          </li>
+          <li>
+            <a href="#"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span></a>
+          </li>
+          <li id="loginField">
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <div id="main">
+    </div>
+    <div class="container">
+      
+    </div>
   </body>
 </html>
