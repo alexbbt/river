@@ -11,10 +11,12 @@ $(document).ready(function() {
 	} else if (page == 'product') {
 		console.log('product');
 		if (item == 'add') {
-			product.add();
-		} else{
-			product.find(item);
-		};
+			parseObject.addProduct();
+		} else if (item == 'all') {
+			parseObject.allProducts();
+		} else {
+			parseObject.product(item);
+		}
 	} else {
 		console.log('main');
 		main.load();
@@ -25,12 +27,15 @@ $(document).ready(function() {
 		return true;
 	});
 	$(window).bind( 'hashchange', function(e) {location.reload(); });
+
 });
 
 var parseObject = (function () {
 	var self = {};
 
-	var Products;
+	var Product;
+	var Category;
+	var ImageObject;
 
 	self.initialize = function() {
 		initialize();
@@ -38,7 +43,9 @@ var parseObject = (function () {
 
 	var initialize = function() {
 		Parse.initialize("0kAbqraYuEVB2Wr8ZihnGtmASPId34SJyzFkHyEo", "a6rw0cA6myWnM3SZ7PfH0LiyUibcXatTlhcYB91f");
-		Products = Parse.Object.extend('Products');
+		Product = Parse.Object.extend('Product');
+		Category = Parse.Object.extend('Category');
+		ImageObject = Parse.Object.extend('Image');
 		checkUser();
 	}
 
@@ -47,7 +54,7 @@ var parseObject = (function () {
 		if (Parse.User.current() == null) {
 			console.log('null user');
 			var loginIcon = $('<span>').addClass('glyphicon glyphicon-log-in').attr('aria-hidden',"true");
-			var a = $('<a>').append(loginIcon).append(' Login').addClass('btn').click(loginSignup);
+			var a = $('<a>').append(loginIcon).append(' Login').addClass('btn').click(loginSignupPlain);
 			$('#loginField').html(a);
 		} else{
 			console.log('user not null');
@@ -78,10 +85,10 @@ var parseObject = (function () {
 			$('#loginField').html(account).append(dropdown).addClass('dropdown');
 		};
 	}
-
-	var loginSignup = function() {
+	var loginSignupPlain = function() {loginSignup('','');}
+	var loginSignup = function(messageToUser, type) {
 		bootbox.dialog({
-		  message: '<div id="loginSignup"></div>',
+		  message: '</div><div id="loginSignup"></div>',
 			title: 'Welcome to River',
 		  buttons: {
 		    facebook: {
@@ -91,16 +98,14 @@ var parseObject = (function () {
 		        console.log("Facebook");
 		      }
 		    },
-		    danger: {
-		      label: "Danger!",
-		      className: "btn-danger",
-		      callback: function() {
-		        console.log("uh oh, look out!");
-		      }
-		    },
 		  }
 		});
 		$('#loginSignup').load('assets/html/loginSignup.html', function() {
+			console.log(type);
+			if (messageToUser != '') {
+				var alert = $('<div>').addClass('alert alert-' + type).attr('role', 'alert').html(messageToUser);
+				$('#loginSignup').prepend(alert);
+			};
 		  $('#loginBox').load('assets/html/login.html', function() {
 		  	$('#loginForm').submit(function() {
 					login();
@@ -108,8 +113,6 @@ var parseObject = (function () {
 				});
 		  });
 		  $('#loginSignupForm').change(function() {
-				//console.log('change');
-				//console.log($('input:radio[name=loginSignup]:checked').val());
 				if ($('input:radio[name=loginSignup]:checked').val() == 'login') {
 					$('#loginBox').load('assets/html/login.html', function() {
 						$('#loginForm').submit(function() {
@@ -126,14 +129,6 @@ var parseObject = (function () {
 					});
 				};
 			});
-		});
-	}
-
-	var test = function() {
-		var TestObject = Parse.Object.extend("TestObject");
-		var testObject = new TestObject();
-		testObject.save({foo: "bar"}).then(function(object) {
-		  alert("yay! it worked");
 		});
 	}
 
@@ -157,11 +152,11 @@ var parseObject = (function () {
 			  },
 			  error: function(user, error) {
 			    // Show the error message somewhere and let the user try again.
-			    alert("Error: " + error.code + " " + error.message);
+			    bootbox.alert("Error: " + error.code + " " + error.message);
 			  }
 			});
 		} else{
-			alert('passwords dont match');
+			bootbox.alert('passwords dont match');
 		};
 
 		return false;
@@ -192,6 +187,215 @@ var parseObject = (function () {
 		Parse.User.logOut();
 		window.location.href = "./";
 	}
+
+	self.addProduct = function(){addProduct();}
+	var addProduct = function() {
+		console.log('add product');
+		if (Parse.User.current()) {
+			$('#main').load('assets/html/addProduct.html', function() {
+				parseObject.categories();
+				$('#inputPicture').change(function(){
+					if (this.files && this.files[0]) {
+		        var reader = new FileReader();
+		        reader.onload = function (e) {
+		         	$('#imagePreview').attr('src', e.target.result);
+		        }
+		        reader.readAsDataURL(this.files[0]);
+		  	  }
+				});
+				console.log('add new loaded');
+				$('#addProductForm').submit(function() {
+					progress.start(5, 'fileUploadProgressBar');
+					addProductP2();
+					return false;
+				});
+			});
+		} else{
+			loginSignup('Please Sign in to add Products, or <a class="alert-link" href="./">Go to the homepage</a>', 'danger');
+		};
+	}
+
+	var addProductP2 = function() {
+		var productItem = new Product();
+
+		$('#addProductForm').find('input').each(function() {
+			if(this.id != 'inputPicture' && this.id != 'categories') {
+				productItem.set(this.id, this.value);
+			}
+		});
+
+		var query = new Parse.Query(Category);
+		query.get(($('#categories').val()), {
+		  success: function(category) {
+		  	var relation = productItem.relation('categories');
+		  	relation.add(category);
+		    productItem.save(null, {
+					success: function(productItem) {
+						console.log('New product created with objectId: ' + productItem.id);
+						var picture  = $('#inputPicture')[0].files[0];
+						if (picture) {
+							var name = picture.name;
+							var parseFile = new Parse.File(name, picture, 'image/png');
+
+							parseFile.save().then( 
+
+							function(parseFile) {
+								console.log('New image uploaded with url: ' + parseFile.url());
+								console.log(parseFile);
+
+								var imageItem = new ImageObject();
+								imageItem.set("product", productItem);
+								imageItem.set("image", parseFile);
+
+								imageItem.save(null, {
+									success: function(imageItem) {
+										console.log('Image saved with ID' + imageItem.id);
+										progress.finish();
+										bootbox.alert('Product Saved', allProducts);
+									}, error: function(imageItem, error) {
+										progress.error();
+										console.log("error assosiating image: " + error.message);
+										console.log(error);
+									}
+								});
+
+							}, 
+							function(parseFile, error) {
+								progress.error();
+								console.log("error saving image: " + error.message);
+							});
+						} else {
+							progress.finish();
+							bootbox.alert('Product Saved', allProducts);
+						}
+					}, error: function(productItem, error) {
+						progress.error();
+						console.log('error saving product: ' + error.message);
+					}
+				});
+		  },
+		  error: function(object, error) {
+		  	progress.error();
+		    console.log(error.message);
+		  }
+		});
+	}
+
+	self.product = function(item) {
+		product(item);
+	}
+
+	var product = function(item) {
+		var query = new Parse.Query(Product);
+		query.equalTo('objectId', item);
+		query.find({
+			success: function(data) {
+				data = data[0];
+				var imageQuery = new Parse.Query(ImageObject);
+				imageQuery.equalTo('product', data);
+				imageQuery.find({
+					success: function(imageData) {
+						imageData = imageData[0];
+						$('#main').load('assets/html/product.html', function() {
+							$('#productTitle').html(data.get('name'));
+							$('#productDescription').html(data.get('description'));
+							if(imageData) {
+								$('#productImage').attr('src', imageData.get('image').url());
+							}
+						});
+					},
+					error: function(imageData, error) {
+						console.log('Error loading Product Image: ' + error.message);
+					}
+				});
+			},
+			error: function(data, error) {
+				console.log('Error loading Product: ' + error.message);
+			}
+		});
+	}
+
+	self.categories = function() {
+		categoriesGet();
+	}
+
+	var categoriesGet = function() {
+		var query = new Parse.Query(Category);
+		query.exists("name");
+		query.find({
+		  success: function(data) {
+		    // The object was retrieved successfully.
+				data.forEach(function(row) {
+					console.log(row.get('name'));
+					var option = $('<option>').html(row.get('name')).val(row.id);
+					$('#categories').append(option);
+				})
+		  },
+		  error: function(data, error) {
+		    // The object was not retrieved successfully.
+		    // error is a Parse.Error with an error code and message.
+		    console.log(error.message);
+		  }
+		});
+	}
+
+	self.allProducts = function() {
+		allProducts();
+	}
+
+	var allProducts = function() {
+		console.log('allProducts');
+		var query = new Parse.Query(Product);
+		query.exists('objectId');
+		query.find({
+			success: function(data) {
+				$('#main').load('assets/html/allProducts.html', function() {
+					data.forEach(function(row) {
+						var imageQuery = new Parse.Query(ImageObject);
+						imageQuery.equalTo('product', row);
+						imageQuery.find({
+							success: function(imageData) {
+								imageData = imageData[0];
+								var relation = row.relation('categories');
+								var catQuery = relation.query();
+								catQuery.find({
+									success: function(cats) {
+										var link = $('<a>').attr('src', '#/product/' + row.id).html('visit product page').addClass('btn btn-default').click(function() {
+											window.location.href = "./#/product/"+ row.id;
+										});
+										var description = $('<p>').html(row.get('description'));
+										var title = $('<h3>').html(row.get('name'));
+										var box = $('<div>').addClass('productBox');
+										var catList = $('<ul>');
+										cats.forEach(function(cat) {
+											catList.append($('<li>').html(cat.get('name')));
+										});
+										if(imageData) {
+											var img = $('<img>').addClass('img-responsive').attr('src', imageData.get('image').url());
+											box.append(img);
+										}
+										box.append(title, description, catList, link);
+										var outerBox = $('<div>').addClass('outerProductBox col-xs-12 col-sm-6 col-md-4 col-lg-3').append(box);
+										$('#allProductsRow').append(outerBox);
+
+									}, error: function(modal, error) {
+										console.log('Error loading Product Categories: ' + error.message);
+									}
+								})
+							},
+							error: function(imageData, error) {
+								console.log('Error loading Product Image: ' + error.message);
+							}
+						});
+					});
+				});
+			},
+			error: function(data, error) {
+				console.log('Error loading Product: ' + error.message);
+			}
+		});
+	}
+
 	return self;
 }());
 
@@ -229,36 +433,6 @@ var search = (function() {
 	return self;
 }());
 
-var product = (function() {
-	self = {};
-
-	self.add = function() {
-		add();
-	}
-
-	var add = function() {
-		console.log('add product');
-		$('#main').load('assets/html/addProduct.html', function() {
-			console.log('add new loaded');
-			$('#addProductForm').submit(function() {
-				var picture  = $('#inputPicture').val();
-				console.log(picture);
-				return false;
-			});
-		});
-	}
-
-	self.find = function(item) {
-		find(item);
-	}
-
-	var find = function(item) {
-		console.log(item);
-	}
-
-	return self;
-}());
-
 var componants = (function() {
 	self = {};
 
@@ -271,6 +445,81 @@ var componants = (function() {
 	self.removeID = function(id) {
 		if($('#'+id))
 			$('#'+id).remove();
+	}
+
+	return self;
+}());
+
+var progress = (function() {
+	var self = {};
+	var interval;
+	var timer;
+	var item;
+	var sr;
+	var start;
+	var percent;
+
+	self.start = function(givenInterval, id) {
+		interval = givenInterval;
+		item = $('#' + id);
+		sr = $(item.children()[0]);
+		start = jQuery.now();
+		percent = 0;
+		set();
+	}
+
+	var set = function() {
+		timer = setInterval(function() {
+			var now = jQuery.now();
+			percent = Math.exp(0.0460517018599 * ((now - start) / interval / 10));
+			update(percent);
+			if (percent >= 75) {
+				clearInterval(timer);
+				start = jQuery.now();
+				timer = setInterval(function() {
+					var now = jQuery.now();
+					percent = Math.exp(0.0182321556794 * ((now - start) / interval / 200)) * 75;
+					update(percent);
+					if (percent >= 90) {
+						clearInterval(timer);
+						start = jQuery.now();
+						timer = setInterval(function() {
+							var now = jQuery.now();
+							percent = Math.exp(0.00425789041702 * ((now - start) / interval / 200)) * 90;
+							update(percent);
+							if (percent >= 98) {
+								clearInterval(timer);
+								start = jQuery.now();
+								timer = setInterval(function() {
+									var now = jQuery.now();
+									percent = Math.exp(0.000338412382134 * ((now - start) / interval / 200)) * 98;
+									update(percent);
+									if (percent >= 99) {
+										clearInterval(timer);
+									};
+								}, 50);
+							};
+						}, 50);
+					};
+				}, 50);
+			};
+		}, 50);
+	}
+
+	self.finish = function() {
+		percent = 100;
+		clearInterval(timer);
+		update(percent);
+	}
+
+	self.error = function() {
+		self.finish();
+		item.addClass('progress-bar-danger').removeClass('active progress-bar-striped');
+	}
+
+	var update = function(percent) {
+		item.attr('aria-valuenow', percent).css('width', percent + '%');
+		sr.html(percent + '% Complete');
 	}
 
 	return self;

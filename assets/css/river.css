@@ -1,7 +1,10 @@
 #main {
-	margin-top: 71px;
+	margin-top: 50px;
 }
 
+.container-main {
+	padding-top: 60px;
+}
 
 .radio-inline label:not(:last-child) {
 	padding-right: 10px;
@@ -9,4 +12,14 @@
 
 .dropdown:hover .dropdown-menu {
     display: block;
+}
+
+.productBox {
+	border: 2px solid #D3D3D3;
+	border-radius: 5px;
+	padding: 10px;
+	box-shadow: 2px 2px 5px #D3D3D3;
+}
+.outerProductBox {
+	padding: 5px;
 }
