@@ -10,6 +10,11 @@ $(document).ready(function() {
 		search.searchAll(item);
 	} else if (page == 'product') {
 		console.log('product');
+		if (item == 'add') {
+			product.add();
+		} else{
+			product.find(item);
+		};
 	} else {
 		console.log('main');
 		main.load();
@@ -17,8 +22,9 @@ $(document).ready(function() {
 
 	$('#searchForm').submit(function() {
 		window.location.href = "./#/search/" + $('#search').val();
-		return false;
-	})
+		return true;
+	});
+	$(window).bind( 'hashchange', function(e) {location.reload(); });
 });
 
 var parseObject = (function () {
@@ -40,63 +46,42 @@ var parseObject = (function () {
 		console.log(Parse.User.current());
 		if (Parse.User.current() == null) {
 			console.log('null user');
-			var span = $('<span>').addClass('glyphicon glyphicon-user').attr('aria-hidden',"true");
-			var a = $('<a>').append(span).append(' Login').addClass('btn').click(loginSignup);
+			var loginIcon = $('<span>').addClass('glyphicon glyphicon-log-in').attr('aria-hidden',"true");
+			var a = $('<a>').append(loginIcon).append(' Login').addClass('btn').click(loginSignup);
 			$('#loginField').html(a);
 		} else{
 			console.log('user not null');
+			console.log(Parse.User.current());
+			var userIcon = $('<span>').addClass('glyphicon glyphicon-user').attr('aria-hidden',"true");
+			if (!Parse.User.current().get('fname')) {
+				var name = Parse.User.current().get('username');
+				} else{
+				var name = Parse.User.current().get('fname')+' '+Parse.User.current().get('lname');
+			};
+			var caret = $('<b>').addClass('caret');
+			var account = $('<a>').append(userIcon).append(' '+name).append(caret).addClass('dropdown-toggle').attr('data-toggle','dropdown').click(function() {
+				window.location.href = "./#/myaccount/";
+			});
+
+			var orders = $('<a>').append('Orders').addClass('dropdown-toggle').click(function() {
+				window.location.href = "./#/orders/";
+			});
+			var ordersli = $('<li>').append(orders);
+
+			var divider = $('<li>').addClass('divider');
+
+			var logoutIcon = $('<span>').addClass('glyphicon glyphicon-log-out').attr('aria-hidden',"true");
+			var logoutButton = $('<a>').append(logoutIcon).append(' Logout').addClass('dropdown-toggle');
+			var logoutli = $('<li>').append(logoutButton).click(logout);
+			
+			var dropdown = $('<ul>').addClass('dropdown-menu').attr('id','myAccountDropdown').append(ordersli, divider, logoutli);
+			$('#loginField').html(account).append(dropdown).addClass('dropdown');
 		};
 	}
 
 	var loginSignup = function() {
-		var login = '<form role="login">' +
-				'	<legend>Login</legend>' +
-				'	<div class="form-group">' +
-				'		<label for="">User Name: </label>' +
-				'		<input type="text" class="form-control" id="user" placeholder="email or user name">' +
-				'	</div>' +
-				'	<div class="form-group">' +
-				'		<label for="">Password: </label>' +
-				'		<input type="password" class="form-control" id="password" placeholder="password">' +
-				'	</div>' +
-				'	<button type="submit" class="btn btn-primary">Login</button>' +
-				'</form>';
-		var signUp = '<form role="login" id="signUpForm">' +
-				'	<legend>Sign Up</legend>' +
-				'	<div class="form-group">' +
-				' 	<label for="">User Name: </label>' +
-				'	  <input type="text" class="form-control" id="userName" placeholder="user name">' +
-				'	</div>' +
-				'	<div class="form-group">' +
-				' 	<label for="">Email: </label>' +
-				'	  <input type="text" class="form-control" id="email" placeholder="email">' +
-				'	</div>' +
-				' <div class="form-group">' +
-				'  <label for="">Password: </label>' +
-				'  <input type="password" class="form-control" id="password" placeholder="password">' +
-				' </div>' +
-				'	<div class="form-group">' +
-				' 	<label for="">Confirm Password: </label>' +
-				'  <input type="password" class="form-control" id="confirmPassword" placeholder="password">' +
-				'	</div>' +
-				'	<button type="submit" class="btn btn-primary">Sign Up</button>' +
-				'</form>';
-		var initial = '<div class="radio radio-inline" id="loginSignupForm">' +
-	      '  <label>' +
-	      '    <input type="radio" name="loginSignup" id="inputlogin" value="login" checked="checked">' +
-	      '    Login' +
-	      '  </label>' +
-	      '  <label>' +
-	      '    <input type="radio" name="loginSignup" id="inputSignup" value="signup">' +
-	      '    Signup' +
-	      '  </label>' +
-	      '</div>' +
-	      '<hr>' +
-	      '<div id="loginBox">' +
-	      login +
-	      '</div>';
 		bootbox.dialog({
-		  message: initial,
+		  message: '<div id="loginSignup"></div>',
 			title: 'Welcome to River',
 		  buttons: {
 		    facebook: {
@@ -115,20 +100,32 @@ var parseObject = (function () {
 		    },
 		  }
 		});
-		$('#loginSignupForm').change(function() {
-			console.log('change');
-			console.log($('input:radio[name=loginSignup]:checked').val());
-			if ($('input:radio[name=loginSignup]:checked').val() == 'login') {
-				$('#loginBox').html(login);
-			} else{
-				$('#loginBox').html(signUp);
-				$('#signUpForm').submit(function() {
-					signup();
+		$('#loginSignup').load('assets/html/loginSignup.html', function() {
+		  $('#loginBox').load('assets/html/login.html', function() {
+		  	$('#loginForm').submit(function() {
+					login();
 					return false;
 				});
-			};
-			
-
+		  });
+		  $('#loginSignupForm').change(function() {
+				//console.log('change');
+				//console.log($('input:radio[name=loginSignup]:checked').val());
+				if ($('input:radio[name=loginSignup]:checked').val() == 'login') {
+					$('#loginBox').load('assets/html/login.html', function() {
+						$('#loginForm').submit(function() {
+							login();
+							return false;
+						});
+					});
+				} else{
+					$('#loginBox').load('assets/html/signup.html', function() {
+						$('#signUpForm').submit(function() {
+							signup();
+							return false;
+						});
+					});
+				};
+			});
 		});
 	}
 
@@ -144,15 +141,18 @@ var parseObject = (function () {
 		console.log($('#password').val() === $('#confirmPassword').val());
 		if ($('#password').val() === $('#confirmPassword').val()) {
 			var user = new Parse.User();
-			user.set("username", $('#userName').val());
+			user.set("username", $('#username').val());
 			user.set("password", $('#password').val());
 			user.set("email", $('#email').val());
+			user.set("fname", $('#fname').val());
+			user.set("lname", $('#lname').val());
 			  
 			// other fields can be set just like with Parse.Object
 			  
 			user.signUp(null, {
 			  success: function(user) {
 			    // Hooray! Let them use the app now.
+			    checkUser();
 			    bootbox.hideAll();
 			  },
 			  error: function(user, error) {
@@ -167,6 +167,31 @@ var parseObject = (function () {
 		return false;
 	}
 
+	var login = function() {
+		var user = $('#username').val();
+		var pass = $('#password').val();
+		var email = $('#email').val();
+		  
+		Parse.User.logIn(user, pass, {
+		  success: function(user) {
+		    // Do stuff after successful login.
+		    console.log('user: ' + user);
+		    window.location.href = "./";
+		    location.reload();
+		  },
+		  error: function(user, error) {
+		    console.log('user: ' + user + ' error: ' + error);
+		    $('#loginFormOuterDiv').prepend(componants.error('User Name or Password does not match', 'loginError'));
+		    $('#username').click(function(){componants.removeID('loginError');});
+		    $('#password').click(function(){componants.removeID('loginError');});
+		  }
+		});
+	}
+
+	var logout = function() {
+		Parse.User.logOut();
+		window.location.href = "./";
+	}
 	return self;
 }());
 
@@ -178,13 +203,13 @@ var main = (function() {
 	}
 
 	var load = function() {
-		var title = React.createElement('h1', { id: 'title', key:1 }, 'Featured Products');
-		var p1 = React.createElement('p', {key:2}, 'Contents ...');
-		var p2a = React.createElement('a', { className: 'btn btn-primary btn-lg' }, 'Learn more');
-		var p2 = React.createElement('p', {key:3}, p2a);
-		var container = React.createElement('div', { className: 'container' },[title, p1, p2]);
-		var jumbotron = React.createElement('div', { className: 'jumbotron' }, container);
-		ReactDOM.render(jumbotron, document.getElementById('main'));
+		var title = $('<h1>').attr('id', 'title').html('Featured Products');
+		var p1 = $('<p>').html('Contents ...');
+		var p2a = $('<a>').addClass('btn btn-primary btn-lg').html('Learn more');
+		var p2 = $('<p>').append(p2a);
+		var container = $('<div>').addClass('container').append(title, p1, p2);
+		var jumbotron = $('<div>').addClass('jumbotron').append(container);
+		$('#main').html(jumbotron);
 	}
 
 	return self;
@@ -204,11 +229,48 @@ var search = (function() {
 	return self;
 }());
 
+var product = (function() {
+	self = {};
+
+	self.add = function() {
+		add();
+	}
+
+	var add = function() {
+		console.log('add product');
+		$('#main').load('assets/html/addProduct.html', function() {
+			console.log('add new loaded');
+			$('#addProductForm').submit(function() {
+				var picture  = $('#inputPicture').val();
+				console.log(picture);
+				return false;
+			});
+		});
+	}
+
+	self.find = function(item) {
+		find(item);
+	}
+
+	var find = function(item) {
+		console.log(item);
+	}
+
+	return self;
+}());
+
 var componants = (function() {
 	self = {};
 
-	self.container = function(query) {
-		search(query);
+	self.error = function(message, id) {
+		var errorIcon = $('<span>').addClass('glyphicon glyphicon-exclamation-sign').attr('aria-hidden', 'true');
+		var errorIconSR = $('<span>').addClass('sr-only').html('Error:');
+		return $('<div>').append(errorIcon,errorIconSR,message).addClass('alert alert-danger').attr('role', 'alert').attr('id', id);
+	}
+
+	self.removeID = function(id) {
+		if($('#'+id))
+			$('#'+id).remove();
 	}
 
 	return self;
