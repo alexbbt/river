@@ -37,6 +37,12 @@ var page = (function () {
     }
   }
 
+  self.error = function(error) {
+  	console.log(error);
+  	console.log('There was an ERROR: ' + error.message);
+  	console.log(stack);
+  }
+
   return self;
 }());
 
@@ -44,6 +50,7 @@ var parseObject = (function () {
   var self = {};
 
   var Product;
+  var Review;
   var Category;
   var ImageObject;
 
@@ -51,47 +58,36 @@ var parseObject = (function () {
   var initialize = function() {
     Parse.initialize("0kAbqraYuEVB2Wr8ZihnGtmASPId34SJyzFkHyEo", "a6rw0cA6myWnM3SZ7PfH0LiyUibcXatTlhcYB91f");
     Product = Parse.Object.extend('Product');
+    Review = Parse.Object.extend('Review');
     Category = Parse.Object.extend('Category');
     ImageObject = Parse.Object.extend('Image');
+
+    $.fn.raty.defaults.starType = 'i';
+
     checkUser();
   }
 
   var checkUser = function() {
-    console.log(Parse.User.current());
+    //console.log(Parse.User.current());
     if (Parse.User.current() == null) {
-      console.log('null user');
+      //console.log('null user');
       var loginIcon = $('<span>').addClass('glyphicon glyphicon-log-in').attr('aria-hidden',"true");
       var a = $('<a>').append(loginIcon).append(' Login').addClass('btn').click(loginSignupPlain);
       $('#loginField').html(a);
     } else{
-      console.log('user not null');
-      console.log(Parse.User.current());
-      var userIcon = $('<span>').addClass('glyphicon glyphicon-user').attr('aria-hidden',"true");
+      //console.log('user not null');
       if (!Parse.User.current().get('fname')) {
         var name = Parse.User.current().get('username');
         } else{
         var name = Parse.User.current().get('fname')+' '+Parse.User.current().get('lname');
       };
-      var caret = $('<b>').addClass('caret');
-      var account = $('<a>').append(userIcon).append(' '+name).append(caret).addClass('dropdown-toggle').attr('data-toggle','dropdown').click(function() {
-        window.location.href = "./#/myaccount/";
-      });
-
-      var orders = $('<a>').append('Orders').addClass('dropdown-toggle').click(function() {
-        window.location.href = "./#/orders/";
-      });
-      var ordersli = $('<li>').append(orders);
-
-      var divider = $('<li>').addClass('divider');
-
-      var logoutIcon = $('<span>').addClass('glyphicon glyphicon-log-out').attr('aria-hidden',"true");
-      var logoutButton = $('<a>').append(logoutIcon).append(' Logout').addClass('dropdown-toggle');
-      var logoutli = $('<li>').append(logoutButton).click(logout);
-      
-      var dropdown = $('<ul>').addClass('dropdown-menu').attr('id','myAccountDropdown').append(ordersli, divider, logoutli);
-      $('#loginField').html(account).append(dropdown).addClass('dropdown');
+      $('#loginField').load('assets/html/loggedinMenu.html', function() {
+      	$('#nameField').html(name);
+      	$('#logoutButon').click(logout);
+      }).addClass('dropdown');
     };
   }
+
   var loginSignupPlain = function() {loginSignup('','');}
   var loginSignup = function(messageToUser, type) {
     bootbox.dialog({
@@ -108,17 +104,10 @@ var parseObject = (function () {
       }
     });
     $('#loginSignup').load('assets/html/loginSignup.html', function() {
-      console.log(type);
       if (messageToUser != '') {
         var alert = $('<div>').addClass('alert alert-' + type).attr('role', 'alert').html(messageToUser);
         $('#loginSignup').prepend(alert);
       };
-      $('#loginBox').load('assets/html/login.html', function() {
-        $('#loginForm').submit(function() {
-          login();
-          return false;
-        });
-      });
       $('#loginSignupForm').change(function() {
         if ($('input:radio[name=loginSignup]:checked').val() == 'login') {
           $('#loginBox').load('assets/html/login.html', function() {
@@ -136,9 +125,9 @@ var parseObject = (function () {
           });
         };
       });
+      $('#inputlogin').click();
     });
   }
-
   var signup = function() {
     console.log($('#password').val() === $('#confirmPassword').val());
     if ($('#password').val() === $('#confirmPassword').val()) {
@@ -168,7 +157,6 @@ var parseObject = (function () {
 
     return false;
   }
-
   var login = function() {
     var user = $('#username').val();
     var pass = $('#password').val();
@@ -179,7 +167,7 @@ var parseObject = (function () {
         // Do stuff after successful login.
         console.log('user: ' + user);
         window.location.href = "./";
-        location.reload();
+        page.reload();
       },
       error: function(user, error) {
         console.log('user: ' + user + ' error: ' + error);
@@ -189,7 +177,6 @@ var parseObject = (function () {
       }
     });
   }
-
   var logout = function() {
     Parse.User.logOut();
     window.location.href = "./";
@@ -197,12 +184,11 @@ var parseObject = (function () {
 
   self.addProduct = function(){addProduct();}
   var addProduct = function() {
-    console.log('add product');
+    //console.log('add product');
     if (Parse.User.current()) {
       $('#main').load('assets/html/addProduct.html', function() {
         parseObject.categories(function(data) {
           data.forEach(function(row) {
-            console.log(row.get('name'));
             var option = $('<option>').html(row.get('name')).val(row.id);
             $('#categories').append(option);
           });
@@ -216,10 +202,9 @@ var parseObject = (function () {
             reader.readAsDataURL(this.files[0]);
           }
         });
-        console.log('add new loaded');
         $('#addProductForm').submit(function() {
           progress.start(5, 'fileUploadProgressBar');
-          addProductP2();
+          submitProduct();
           return false;
         });
       });
@@ -227,117 +212,234 @@ var parseObject = (function () {
       loginSignup('Please Sign in to add Products, or <a class="alert-link" href="./">Go to the homepage</a>', 'danger');
     };
   }
-
-  var addProductP2 = function() {
+  var submitProduct = function() {
     var productItem = new Product();
 
     $('#addProductForm').find('input').each(function() {
-      if(this.id != 'inputPicture' && this.id != 'categories') {
+      if(this.id != 'inputPicture' && this.id != 'price') {
         productItem.set(this.id, this.value);
+      } else if (this.id == 'price') {
+      	productItem.set(this.id, Number(this.value));
       }
     });
+    productItem.set('description', $('#description').val());
 
-    var query = new Parse.Query(Category);
-    query.get(($('#categories').val()), {
-      success: function(category) {
-        var relation = productItem.relation('categories');
-        relation.add(category);
+    var parseFile;
+    var pictureName;
+    var relation;
+    var category;
+    async.series([
+    	function(callback) {
+        var query = new Parse.Query(Category);
+		    query.get(($('#categories').val()), {
+		      success: function(results) {
+		      	category = results;
+		        callback();
+		      },
+		      error: function(results, error) {
+		        return callback(error);
+		      }
+		    });
+      },
+    	function(callback) {
+        productItem.set('category', category);
         productItem.save(null, {
           success: function(productItem) {
-            console.log('New product created with objectId: ' + productItem.id);
-            var picture  = $('#inputPicture')[0].files[0];
-            if (picture) {
-              var name = picture.name;
-              var parseFile = new Parse.File(name, picture, 'image/png');
-
-              parseFile.save().then( 
-
-              function(parseFile) {
-                console.log('New image uploaded with url: ' + parseFile.url());
-                console.log(parseFile);
-
-                var imageItem = new ImageObject();
-                imageItem.set("product", productItem);
-                imageItem.set("image", parseFile);
-
-                imageItem.save(null, {
-                  success: function(imageItem) {
-                    console.log('Image saved with ID' + imageItem.id);
-                    progress.finish();
-                    bootbox.alert('Product Saved', allProducts);
-                  }, error: function(imageItem, error) {
-                    progress.error();
-                    console.log("error assosiating image: " + error.message);
-                    console.log(error);
-                  }
-                });
-
-              }, 
-              function(parseFile, error) {
-                progress.error();
-                console.log("error saving image: " + error.message);
-              });
-            } else {
-              progress.finish();
-              bootbox.alert('Product Saved', allProducts);
-            }
+            callback();
           }, error: function(productItem, error) {
-            progress.error();
-            console.log('error saving product: ' + error.message);
+            return callback(error);
           }
         });
       },
-      error: function(object, error) {
-        progress.error();
-        console.log(error.message);
+    	function(callback) {
+        console.log('New product created with objectId: ' + productItem.id);
+        var picture  = $('#inputPicture')[0].files[0];
+        if (picture) {
+          pictureName = picture.name;
+          parseFile = new Parse.File(pictureName, picture, 'image/png');
+
+          parseFile.save().then( 
+	          function(parseFile) {
+	            callback();
+	          }, 
+	          function(parseFile, error) {
+	            return callback(error);
+          });
+        } else {
+          progress.finish();
+          bootbox.alert('Product Saved', allProducts);
+          return callback();
+        }
+      },
+      function(callback) {
+      	console.log('New image uploaded with url: ' + parseFile.url());
+        console.log(parseFile);
+
+        var imageItem = new ImageObject();
+        imageItem.set("product", productItem);
+        imageItem.set("image", parseFile);
+        imageItem.save(null, {
+          success: function(results) {
+            console.log('Image saved with ID' + imageItem.id);
+            progress.finish();
+            bootbox.alert('Product Saved', callback);
+          }, error: function(results, error) {
+          	return callback(error);
+          }
+        });
       }
+    ], function(err) { 
+        if (err) {
+        	progress.error();
+        	return page.error(err);
+        } 
+        window.location.href = "./#/product/all";
     });
   }
 
-  self.product = function(item) {
-    product(item);
-  }
-
+  self.product = function(item) {product(item);}
   var product = function(item) {
     var html = $('<div>');
     var cat;
-    var query = new Parse.Query(Product);
-    query.equalTo('objectId', item);
-    query.find({
-      success: function(data) {
-        data = data[0];
+    var data;
+    var imageData;
+    var reviews;
+    var rating = 0;
+
+    async.series([
+      function(callback) {
+      	var query = new Parse.Query(Product);
+    		query.equalTo('objectId', item);
+      	query.find({
+		      success: function(results) {
+		        data = results[0];
+		        callback();
+		      },
+		      error: function(results, error) {
+		        return callback(error);
+		      }
+		    });
+      },
+    	function(callback) {
         var imageQuery = new Parse.Query(ImageObject);
         imageQuery.equalTo('product', data);
         imageQuery.find({
-          success: function(imageData) {
-            imageData = imageData[0];
-            html.load('assets/html/product.html', function() {
-              html.find('#productTitle').html(data.get('name'));
-              html.find('#productDescription').html(data.get('description'));
-              html.find('#productPrice').html(data.get('price'));
-              cat = data.get('category');
-              console.log(cat);
-              if(imageData) {
-                html.find('#productImage').attr('src', imageData.get('image').url());
-              }
-              productPage({html: html, category: cat});
-            });
+          success: function(results) {
+            imageData = results[0];
+            callback();
           },
-          error: function(imageData, error) {
-            console.log('Error loading Product Image: ' + error.message);
+          error: function(results, error) {
+            return callback(error);
           }
         });
       },
-      error: function(data, error) {
-        console.log('Error loading Product: ' + error.message);
+      function(callback) {
+        html.load('assets/html/product.html', function() {
+	        html.find('#productTitle').html(data.get('name'));
+	        html.find('#productDescription').html(data.get('description'));
+	        html.find('#productPrice').html('$' + data.get('price'));
+	        cat = data.get('category');
+	        if(imageData) {
+	          html.find('#productImage').attr('src', imageData.get('image').url());
+	        }
+	       	callback();
+	      });
+      },
+      function(callback) {
+      	var reviewQuery = new Parse.Query(Review);
+    		reviewQuery.equalTo('product', data);
+    		reviewQuery.include("user");
+    		reviewQuery.find({
+		      success: function(results) {
+		      	reviews = results;
+		      	callback();
+		      },
+		      error: function(results, error) {
+		        return callback(error);
+		      }
+		    });
+      },
+      function(callback) {
+      	if (reviews.length !== 0) {
+      		html.find('#reviewsBox').empty();
+      	};
+      	async.forEach(reviews, function(review, callbackForEach) {
+        	console.log(review);
+        	var reviewDom = $('<div>');
+        	reviewDom.load('assets/html/reviewItem.html', function() {
+        		reviewDom.find('#reviewRating').raty({readOnly: true, score: function() {
+        			return review.get('rating');
+        		}}).attr('id', 'reviewRating' + review.id);
+        		if (review.get('user')) {
+        			reviewDom.find('#reviewUser').html(review.get('user').get('fname') + ' ' + review.get('user').get('lname'));
+        		} else{
+        			reviewDom.find('#reviewUser').html('Anonymous');
+        		};
+        		reviewDom.find('#reviewUser').attr('id', 'reviewUser' + review.id);
+        		var today = new Date(); // Todays date
+						var oneDay  = 24*60*60*1000;
+						var daysAgo =Math.floor(Math.abs((today.getTime() - Date.parse(review.get('createdAt'))) / oneDay));
+        		reviewDom.find('#reviewDate').html((daysAgo == 0 ) ? 'Today':(daysAgo + " day" + ((daysAgo == 1) ? '' : '\'s'))).attr('id', 'reviewDate' + review.id);
+        		reviewDom.find('#reviewText').html(review.get('review')).attr('id', 'reviewText' + review.id);
+
+        		rating += review.get('rating');
+
+        		html.find('#reviewsBox').append(reviewDom);
+        		callbackForEach();
+        	});
+        }, function(err) {
+    				if (err) return page.error(err);
+    				if (reviews.length !== 0) {
+    					html.find('#productRating').raty({readOnly: true, score: function() {
+	        			return (rating / reviews.length);
+	        		}});
+	        		html.find('#productRatingText').html(rating / ((reviews.length == 0) ? 1 : reviews.length) + ' Stars');
+    				};
+        		html.find('#reviewCount').html(reviews.length + ' reviews');
+    				callback();
+    		});
+      },
+      function(callback) {
+      	html.find('#addReview').load('assets/html/reviewForm.html', function() {
+      		var clickCounter = 0;
+      		html.find('#leaveAReviewButton').click(function() {
+      			clickCounter++;
+      			if (!$('#addReview').is(":visible")) {
+	      			$('#addReview').slideDown(800);
+	      			if (clickCounter == 1) {
+		      			$('#star').raty({ 
+							    target: '#ratingHintViewer', 
+							    hints: ['I hate it', 'I don\'t like it', 'I\'ts okay', 'I like it', 'I love it'],
+							    click: function(score) {
+							      $('#star').removeClass('ratingPreClick');
+							    }
+							  });
+		      		}
+		      		$('#leaveAReviewButton').html('Cancel').removeClass('btn-success').addClass('btn-warning');
+						} else {
+							$('#addReview').slideUp(800);
+							$('#leaveAReviewButton').html('Leave a Review').removeClass('btn-warning').addClass('btn-success');
+						}
+						$('#submitReviewForm').submit(function() {
+							submitReview(data);
+							return false;
+						});
+      		});
+      		if (cat) {
+	        	console.log(cat.id);
+	        	productPage({html: html, category: cat.id});
+	        } else{
+	        	productPage({html: html});
+	        };
+	        callback();
+	      }).hide();
       }
+    ], function(err) { 
+        if (err) return page.error(err);
     });
   }
 
-  self.categories = function(success) {
-    categoriesGet(success);
-  }
-
+  self.categories = function(success) {categoriesGet(success);}
   var categoriesGet = function(success) {
     var query = new Parse.Query(Category);
     query.exists("name");
@@ -351,60 +453,103 @@ var parseObject = (function () {
     });
   }
 
-  self.allProducts = function() {
-    allProducts();
-  }
-
+  self.allProducts = function() {allProducts();}
   var allProducts = function() {
     var html = $('<div>');
-    console.log('allProducts');
-    var query = new Parse.Query(Product);
-    query.exists('objectId');
-    query.find({
-      success: function(data) {
-        html.load('assets/html/allProducts.html', function() {
-          var length = data.length;
-          data.forEach(function(row) {
-            var imageQuery = new Parse.Query(ImageObject);
-            imageQuery.equalTo('product', row);
-            imageQuery.find({
-              success: function(imageData) {
-                imageData = imageData[0];
-                var relation = row.relation('categories');
-                var catQuery = relation.query();
-                catQuery.find({
-                  success: function(cats) {
-                    var html2 = $('<div>');
-                    html2.load('assets/html/allProductsItem.html', function() {
-                      html2.find('#productTitle').attr('href', './#/product/' + row.id).html(row.get('name')).attr('id', 'productTitle' + row.id);
-                      html2.find('#productPrice').html('$' + row.get('price')).attr('id', 'productPrice' + row.id);
-                      cats.forEach(function(cat) {
-                        html2.find('#productDept').attr('href', './#/dept/' + cat.get('name')).html(cat.get('name')).attr('id', 'productDept' + row.id);
-                      });
-                      if(imageData) {
-                        html2.find('#productImage').attr('src', imageData.get('image').url()).html(row.get('name')).attr('id', 'productImage' + row.id);
-                      }
-                      console.log(html2.html());
-                      html.find('#allProductsRow').append(html2);
-                      if(!--length) {
-                        productPage({html: html});
-                      }
-                    });
-                  }, error: function(modal, error) {
-                    console.log('Error loading Product Categories: ' + error.message);
-                  }
-                })
-              },
-              error: function(imageData, error) {
-                console.log('Error loading Product Image: ' + error.message);
-              }
-            });
-          });
-        });
-      },
-      error: function(data, error) {
-        console.log('Error loading Product: ' + error.message);
-      }
+    var data;
+    async.series([
+    	function(callback) {
+    		var query = new Parse.Query(Product);
+				query.exists('objectId');
+		    query.find({
+		      success: function(results) {
+		      	data = results;
+		        html.load('assets/html/allProducts.html', function(results) {
+		        	callback();
+		        });
+		      },
+		      error: function(error) {
+		        return callback(error);
+		      }
+		    });
+    	}, 
+    	function(callback) {
+    		var counter = 0;
+    		async.forEach(data, function(row, callbackForEach) {
+	      	var html2 = $('<div>');
+					var imageData;
+					var rating = 0;
+					var reviews = 0;
+			    async.series([
+			    	function(callbackInnerSeries) {
+			        var imageQuery = new Parse.Query(ImageObject);
+			        imageQuery.equalTo('product', row);
+			        imageQuery.find({
+			          success: function(results) {
+			            imageData = results[0];
+			            callbackInnerSeries();
+			          },
+			          error: function(error) {
+			            return callbackInnerSeries(error);
+			          }
+			        });
+			      },
+			      function(callbackInnerSeries) {
+			        html2.load('assets/html/allProductsItem.html', function() {
+			          html2.find('#productTitle').attr('href', './#/product/' + row.id).html(row.get('name')).attr('id', 'productTitle' + row.id);
+			          html2.find('#productPrice').html('$' + row.get('price')).attr('id', 'productPrice' + row.id);
+			          html2.find('#productDept').attr('href', './#/dept/' + row.get('category')).html(row.get('category')).attr('id', 'productDept' + row.id);
+			          if(imageData) {
+			            html2.find('#productImage').attr('src', imageData.get('image').url()).html(row.get('name')).attr('id', 'productImage' + row.id);
+			          }
+			          callbackInnerSeries();
+			        });
+			      },
+			      function(callbackInnerSeries) {
+			      	Parse.Cloud.run('averageRating', {productID: row.id}, {
+			      		success: function(results){
+			      			rating = results.average;
+			      			reviews = results.total;
+			      			if (rating == 0) reviews = 0;
+			      			callbackInnerSeries();
+			      		},
+			      		error: function(error) {
+			      			return callbackInnerSeries(error);
+			      		}
+			      	});
+			      }, 
+			      function(callbackInnerSeries) {
+			      	//console.log(rating + '/' + reviews);
+			      	html2.find('#reviewCount').html(reviews + " review" + ((reviews == 1)? '': 's')).attr('id', 'reviewCount' + row.id);
+			      	if (reviews !== 0) {
+			      		html2.find('#productRatingText').html(('<br>' + rating + " star" + ((reviews == 1)? '': 's'))).attr('id', 'productRatingText' + row.id);
+			      		html2.find('#productRating').raty({readOnly: true, score: function() {
+		        			return rating;
+		        		}}).attr('id', 'productPrice' + row.id);
+			      	};
+		          callbackInnerSeries();
+			      },
+			      function(callbackInnerSeries) {
+		          html.find('#allProductsRow').append(html2);
+		          counter ++;
+		          if (counter % 2 == 0) html.find('#allProductsRow').append('<div class="clearfix visible-xs"></div>');
+		          if (counter % 3 == 0) html.find('#allProductsRow').append('<div class="clearfix visible-sm"></div><div class="clearfix visible-md"></div>');
+		          if (counter % 4 == 0) html.find('#allProductsRow').append('<div class="clearfix visible-lg">');
+		          callbackInnerSeries();
+			      }
+			    ], function(err) { 
+			        if (err) return page.error(err);
+			        callbackForEach();
+			    });
+    		}, function(err) {
+    				if (err) return page.error(err);
+    				callback();
+    		});
+    	}
+    ], function(err) {
+    		if (err) return page.error(err);
+    		
+    		productPage({html: html});
     });
   }
 
@@ -414,9 +559,42 @@ var parseObject = (function () {
       $('#productInnerPage').html(object.html);
     } else {
       $('#main').load('assets/html/productPage.html', function() {
+      	parseObject.categories(function(data) {
+      		//console.log(data);
+      		$('#deptList').empty();
+      		$('#deptList').append($('<a>').attr('href', './#/product/all').html('All Departments').addClass('list-group-item'));
+      		data.forEach(function(row) {
+      			console.log(row.get('name'));
+      			$('#deptList').append($('<a>').attr('href', './#/dept/' + row.get('name').toLowerCase()).html(row.get('name')).attr('id', row.id).addClass('list-group-item'));
+      		});
+      	});
         $('#productInnerPage').html(object.html);
       });
     }
+    if (object.cat) {
+    	$('#deptList').find('.active').removeClass('active');
+    	$('#'+object.cat).addClass('active');
+    } else{};
+  }
+
+  var submitReview = function(product) {
+  	var title = $('#titleInput').val();
+  	var rating = $('#star').raty('score');
+  	var review = $('#reviewTextArea').val();
+  	var productReview = new Review();
+  	productReview.set('title', title);
+  	productReview.set('rating', rating);
+  	productReview.set('review', review);
+  	productReview.set('product', product);
+  	productReview.set('user', Parse.User.current());
+  	productReview.save(null, {
+      success: function(productItem) {
+        $('#addReview').html('<h1>Thank you</h1>');
+        $('#addReview').slideUp(1500);
+      }, error: function(productItem, error) {
+        return page.error(error);
+      }
+    });
   }
 
 

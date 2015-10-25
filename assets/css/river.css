@@ -37,22 +37,40 @@
 }
 
 .caption {
-    height: 130px;
     overflow: hidden;
 }
 
 .caption h4 {
-    white-space: nowrap;
 }
 
 .thumbnail img {
-    width: 100%;
+    max-height: 200px;
 }
 
 .ratings {
-    padding-right: 10px;
-    padding-left: 10px;
-    color: #d17581;
+  padding-right: 10px;
+  padding-left: 10px;
+  color: #d17581;
+}
+
+#ratingOuterBox {
+	margin-bottom: 15px;
+	height: 25px;
+}
+
+#ratingHintViewer {
+	height: 25px;
+	line-height: 25px;
+	font-size: 25px;
+}
+.ratingPreClick:hover > i {
+	color: black;
+}
+.star-on-png, .star-half-png {
+	color: rgb(255,183,0);
+}
+.allProductStars {
+	width: 10px;
 }
 
 .thumbnail {

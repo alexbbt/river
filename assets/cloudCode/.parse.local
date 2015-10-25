@@ -1,0 +1,10 @@
+{
+  "applications": {
+    "_default": {
+      "link": "river"
+    },
+    "river": {
+      "applicationId": "0kAbqraYuEVB2Wr8ZihnGtmASPId34SJyzFkHyEo"
+    }
+  }
+}
