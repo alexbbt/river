@@ -28,3 +28,32 @@ Parse.Cloud.define("averageRating", function(request, response) {
     response.error("review lookup failed " + request.params.productID + " " + error.message);
   });
 });
+
+var _ = require("underscore");
+Parse.Cloud.beforeSave("Product", function(request, response) {
+  var product = request.object;
+  var toLowerCase = function(w) { return w.toLowerCase(); };
+  var string = product.get("name") + product.get("shortDescription") + product.get("description");
+  var words = string.split(/\b/);
+  words = _.map(words, toLowerCase);
+  var stopWords = ["the", "in", "and"]
+  words = _.filter(words, function(w) {
+    return w.match(/^\w+$/) && !   _.contains(stopWords, w);
+  });
+  product.set("words", words);
+  response.success();
+});
+
+Parse.Cloud.beforeSave("Review", function(request, response) {
+  var review = request.object;
+  var toLowerCase = function(w) { return w.toLowerCase(); };
+  var string = review.get("title") + review.get("review");
+  var words = string.split(/\b/);
+  words = _.map(words, toLowerCase);
+  var stopWords = ["the", "in", "and"]
+  words = _.filter(words, function(w) {
+    return w.match(/^\w+$/) && !   _.contains(stopWords, w);
+  });
+  review.set("words", words);
+  response.success();
+});

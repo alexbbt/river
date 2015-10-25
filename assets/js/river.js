@@ -3,8 +3,9 @@ $(document).ready(function() {
   page.reload();
 
   $('#searchForm').submit(function() {
-    window.location.href = "./#/search/" + $('#search').val();
-    return true;
+  	var searchString = $('#search').val();
+    window.location.href = "./#/search/" + searchString.split(' ').join('-');
+    return false;
   });
   $(window).bind( 'hashchange', function(e) {page.reload(); });
 
@@ -21,12 +22,12 @@ var page = (function () {
     //console.log('page: ' + page);
     if (page == 'search') {
       //console.log('search');
-      search.searchAll(item);
+      search.searchAll(item.split('-'));
     } else if (page == 'product') {
       //console.log('product');
       if (item == 'add') {
         parseObject.addProduct();
-      } else if (item == 'all') {
+      } else if (item == 'all' || item == '') {
         parseObject.allProducts();
       } else {
         parseObject.product(item);
@@ -472,6 +473,7 @@ var parseObject = (function () {
 			      },
 			      function(callbackInnerSeries) {
 			        html2.load('assets/html/allProductsItem.html', function() {
+			          html2.find('#productImageLink').attr('href', './#/product/' + row.id).attr('id', 'productImageLink' + row.id);
 			          html2.find('#productTitle').attr('href', './#/product/' + row.id).html(row.get('name')).attr('id', 'productTitle' + row.id);
 			          html2.find('#productPrice').html('$' + row.get('price')).attr('id', 'productPrice' + row.id);
 			          html2.find('#productDept').attr('href', './#/dept/' + row.get('category').get('searchName')).html(row.get('category').get('searchName')).attr('id', 'productDept' + row.id);
@@ -655,6 +657,7 @@ var main = (function() {
   self = {};
 
   self.load = function() {
+  	$('#loading').hide();
   	parseObject.allProducts();
     //load();
   }
