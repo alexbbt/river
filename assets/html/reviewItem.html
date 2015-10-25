@@ -1,9 +1,17 @@
 <hr>
 <div class="row">
   <div class="col-md-12">
-    <span id="reviewRating"></span>
-    <span id="reviewUser">Anonymous</span>
-    <span id="reviewDate" class="pull-right">10 days ago</span>
-    <p id="reviewText">This product was great in terms of quality. I would definitely buy another!</p>
+  	<h4>
+  		<span id="deleteReview" class="btn btn-lg remove-buttons glyphicon glyphicon-remove-sign pull-right" aria-hidden="true"></span>
+  		<span id="editReview" class="btn btn-lg edit-buttons glyphicon glyphicon-edit pull-right" aria-hidden="true"></span>
+	    <span id="reviewRating"></span>
+  	  <span id="reviewTitle">Anonymous</span>
+  	</h4>
+    <div class="reviewPerson">by <span id="reviewUser">Anonymous</span>, <span id="reviewDate">10 days ago</span></div>
+    <p id="reviewText" class="reviewText">This product was great in terms of quality. I would definitely buy another!</p>
+    <div><span id="reviewHelpful" class="helpful">0 out of 0 found this review helpful</span><span>
+	    <button type="button" id="reviewHelpfulButtonUp" class="btn btn-xs btn-hover-success btn-default glyphicon glyphicon-thumbs-up"></button>
+			<button type="button" id="reviewHelpfulButtonDown" class="btn btn-xs btn-hover-warning btn-default glyphicon glyphicon-thumbs-down"></button>
+		</span></div>
   </div>
 </div>

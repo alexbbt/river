@@ -1,0 +1,30 @@
+<div class="container">
+  <h3>My Account</h3>
+  <hr>
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-6">
+      <form role="login" id="signUpForm">
+        <legend>Update Account Settings</legend>
+        <div class="form-group">
+          <label for="">User Name: </label>
+          <input type="text" class="form-control" id="username" placeholder="user name" required>
+        </div>
+        <div class="form-group form-inline">
+          <label for="">First &amp; Last Name: </label><br>
+          <input type="text" class="form-control" id="fname" placeholder="First" required>
+          <input type="text" class="form-control" id="lname" placeholder="Last" required>
+        </div>
+        <div class="form-group">
+          <label for="">Email: </label>
+          <input type="text" class="form-control" id="email" placeholder="email" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </form>
+    </div>
+    <div class="col-xs-12 col-sm-12 col-md-6">
+      <legend>Your Reviews</legend>
+      <p>You can edit or delete them.</p>
+      <div id="yourReviews"></div>
+    </div>
+  </div>
+</div>

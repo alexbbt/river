@@ -38,6 +38,8 @@ var page = (function () {
     	} else{
     		parseObject.department('all');
     	};
+    } else if (page == 'account') {
+    	parseObject.account();
     } else{
       //console.log('main');
       main.load();
@@ -189,6 +191,48 @@ var parseObject = (function () {
     window.location.href = "./";
   }
 
+  self.account = function() {account();}
+  var account = function() {
+  	if (Parse.User.current()) {
+  		var reviews;
+  		async.series([
+  			function(callback) {
+  				$('#main').load('assets/html/account.html', function() {
+  					$('#loading').hide();
+  					callback();
+  				});
+  			},
+  			function(callback) {
+	      	var reviewQuery = new Parse.Query(Review);
+	    		reviewQuery.equalTo('user', Parse.User.current());
+	    		reviewQuery.equalTo('state', 1);
+	    		reviewQuery.find({
+			      success: function(results) {
+			      	reviews = results;
+			      	callback();
+			      },
+			      error: function(results, error) {
+			        return callback(error);
+			      }
+			    });
+	      },
+	      function(callback) {
+  				async.forEach(reviews, function(review, callbackForEach) {
+	        	makeReviewItem(review, 'yourReviews', false);
+			  		callbackForEach();
+	        }, function(err) {
+	    				if (err) return callback(err);
+	    				callback();
+	    		});
+  			}
+  		], function(err) {
+  				if(err) return page.error(err);
+  		})
+  	} else {
+  		loginSignupPlain();
+  	};
+  }
+
   self.addProduct = function(){addProduct();}
   var addProduct = function() {
     //console.log('add product');
@@ -315,6 +359,7 @@ var parseObject = (function () {
       function(callback) {
       	var query = new Parse.Query(Product);
     		query.equalTo('objectId', item);
+    		query.include('category');
       	query.find({
 		      success: function(results) {
 		        data = results[0];
@@ -343,7 +388,7 @@ var parseObject = (function () {
 	        html.find('#productTitle').html(data.get('name'));
 	        html.find('#productDescription').html(data.get('description'));
 	        html.find('#productPrice').html('$' + data.get('price'));
-	        cat = data.get('category');
+	        cat = data.get('category').get('searchName');
 	        if(imageData) {
 	          html.find('#productImage').attr('src', imageData.get('image').url());
 	        }
@@ -381,8 +426,8 @@ var parseObject = (function () {
 	      		html.find('#leaveAReviewButton').click(function() {loginSignup('Please sign in to leave a review', 'danger');});
 	      	};
       		if (cat) {
-	        	// console.log(cat.id);
-	        	productPage({html: html, category: cat.id});
+	        	// console.log(cat);
+	        	productPage({html: html, cat: cat});
 	        } else{
 	        	productPage({html: html});
 	        };
@@ -569,6 +614,7 @@ var parseObject = (function () {
       function(callback) {
       	var reviewQuery = new Parse.Query(Review);
     		reviewQuery.equalTo('product', product);
+    		reviewQuery.equalTo('state', 1);
     		reviewQuery.include("user");
     		reviewQuery.find({
 		      success: function(results) {
@@ -584,30 +630,18 @@ var parseObject = (function () {
       	if (reviews.length !== 0) {
       		$('#reviewsBox').empty();
       	};
+      	if (Parse.User.current()) {
+      		var userReviewsObject = Parse.User.current().get('reviewsVotedOn');
+	      	var userReviews = [];
+	      	for (var i = 0; i < userReviewsObject.length; i++) {
+	    			userReviews.push(userReviewsObject[i].id);
+	    		};
+      	};
       	async.forEach(reviews, function(review, callbackForEach) {
-        	//console.log(review);
-        	var reviewDom = $('<div>');
-        	reviewDom.load('assets/html/reviewItem.html', function() {
-        		reviewDom.find('#reviewRating').raty({readOnly: true, score: function() {
-        			return review.get('rating');
-        		}}).attr('id', 'reviewRating' + review.id);
-        		if (review.get('user')) {
-        			reviewDom.find('#reviewUser').html(review.get('user').get('fname') + ' ' + review.get('user').get('lname'));
-        		} else{
-        			reviewDom.find('#reviewUser').html('Anonymous');
-        		};
-        		reviewDom.find('#reviewUser').attr('id', 'reviewUser' + review.id);
-        		var today = new Date(); // Todays date
-						var oneDay  = 24*60*60*1000;
-						var daysAgo =Math.floor(Math.abs((today.getTime() - Date.parse(review.get('createdAt'))) / oneDay));
-        		reviewDom.find('#reviewDate').html((daysAgo == 0 ) ? 'Today':(daysAgo + " day" + ((daysAgo == 1) ? '' : '\'s'))).attr('id', 'reviewDate' + review.id);
-        		reviewDom.find('#reviewText').html(review.get('review')).attr('id', 'reviewText' + review.id);
-
-        		rating += review.get('rating');
-
-        		$('#reviewsBox').append(reviewDom);
-        		callbackForEach();
-        	});
+      		var vote = ((userReviews.indexOf(review.id) == -1) && review.get('user').id != Parse.User.current().id);
+        	makeReviewItem(review, 'reviewsBox', vote, populateReviews);
+		  		rating += review.get('rating');
+		  		callbackForEach();
         }, function(err) {
     				if (err) return page.error(err);
     				if (reviews.length !== 0) {
@@ -624,7 +658,55 @@ var parseObject = (function () {
         if (err) return page.error(err);
     });
   }
+  var makeReviewItem = function(review, parent, vote) {
+  	var reviewDom = $('<div>');
+  	reviewDom.load('assets/html/reviewItem.html', function() {
+  		reviewDom.find('#reviewRating').raty({readOnly: true, score: function() {
+  			return review.get('rating');
+  		}}).attr('id', 'reviewRating' + review.id);
+  		if (review.get('user')) {
+  			reviewDom.find('#reviewUser').html(review.get('user').get('fname') + ' ' + review.get('user').get('lname'));
+  		} else{
+  			reviewDom.find('#reviewUser').html('Anonymous');
+  		};
+  		reviewDom.find('#reviewUser').attr('id', 'reviewUser' + review.id);
+  		var today = new Date(); // Todays date
+			var oneDay  = 24*60*60*1000;
+			// console.log(Date.parse(review.get('createdAt')));
+			var daysAgo =Math.floor(Math.abs((today.getTime() - Date.parse(review.get('createdAt'))) / oneDay));
+  		reviewDom.find('#reviewDate').html((daysAgo == 0 ) ? 'Today':(daysAgo + " day" + ((daysAgo == 1) ? '' : '\'s'))).attr('id', 'reviewDate' + review.id);
+  		reviewDom.find('#reviewTitle').html(review.get('title')).attr('id', 'reviewTitle' + review.id);
+  		reviewDom.find('#reviewText').html(review.get('review')).attr('id', 'reviewText' + review.id);
+  		reviewDom.find('#reviewHelpful').html(( review.get('up') ? review.get('up') : 0 ) + ' out of ' + (( review.get('up') ? review.get('up') : 0 ) + ( review.get('down') ? review.get('down') : 0 )) + ' found this review helpful').attr('id', 'reviewHelpful' + review.id);
 
+  		if (vote){
+  			reviewDom.find('#reviewHelpfulButtonUp').click(function() {
+	  			submitReviewrating(review, 'up');
+	  		}).attr('id', 'reviewHelpfulButtonUp' + review.id);
+	  		reviewDom.find('#reviewHelpfulButtonDown').click(function() {
+	  			submitReviewrating(review, 'down');
+	  		}).attr('id', 'reviewHelpfulButtonDown' + review.id);
+  		} else {
+  			reviewDom.find('#reviewHelpfulButtonUp').remove();
+  			reviewDom.find('#reviewHelpfulButtonDown').remove();
+  		}
+
+  		if (review.get('user').id == Parse.User.current().id) {
+  			reviewDom.find('#deleteReview').click(function() {
+  				deleteReview(review);
+  				reviewDom.slideUp(500);
+	  		}).attr('id', 'deleteReview' + review.id);
+	  		reviewDom.find('#editReview').click(function() {
+	  			editReview(review, reviewDom);
+	  		}).attr('id', 'editReview' + review.id);
+  		} else{
+  			reviewDom.find('#deleteReview').remove();
+	  		reviewDom.find('#editReview').remove();
+  		};
+  	
+  		$('#' + parent).append(reviewDom);
+  	});
+  }
   var submitReview = function(product) {
   	if (Parse.User.current()) {
 	  	var title = $('#titleInput').val();
@@ -635,6 +717,7 @@ var parseObject = (function () {
 	  	productReview.set('rating', rating);
 	  	productReview.set('review', review);
 	  	productReview.set('product', product);
+	  	productReview.set('state', 1);
 	  	productReview.set('user', Parse.User.current());
 	  	productReview.save(null, {
 	      success: function(productItem) {
@@ -645,10 +728,57 @@ var parseObject = (function () {
 	        return page.error(error);
 	      }
 	    });
+	  } else {
+	  	loginSignup('Please sign in to leave a review', 'danger');
 	  };
   }
-
-
+  var submitReviewrating = function(review, up) {
+  	if (Parse.User.current()) {
+	  	console.log(review);
+	  	console.log(up);
+	  	console.log(review.get('user'));
+	  	var user = Parse.User.current();
+	  	if (user.id == review.get('user').id) {
+	  		// console.log('same user');
+	  	} else{
+		  	user.addUnique('reviewsVotedOn', review);
+		  	user.save(null, {
+		      success: function(user) {
+		        // console.log('user Updated');
+		        $('#reviewHelpfulButtonUp' + review.id).remove();
+        		$('#reviewHelpfulButtonDown' + review.id).remove();
+		      }, error: function(user, error) {
+		        return page.error(error);
+		      }
+		    });
+		    review.increment(up);
+		    review.save(null, {
+		      success: function(user) {
+		        // console.log('incremented');
+		        review.fetch({
+		        	success: function(review) {
+		        		$('#reviewHelpful' + review.id).html(review.get('up') + ' out of ' + (review.get('up') + review.get('down')) + ' found this review helpful').attr('id', 'reviewHelpful' + review.id);
+		        	}
+		        })
+		      }, error: function(user, error) {
+		        return page.error(error);
+		      }
+		    });
+		  };
+	  } else {
+	  	loginSignup('Please sign in to rate a review', 'warning');
+	  };
+  }
+  var editReview = function(review, domObject) {
+  	console.log(review);
+  	console.log(domObject);
+  	bootbox.alert('editing is not ready');
+  }
+  var deleteReview =  function(review) {
+  	console.log(review);
+  	review.set('state', -1);
+  	review.save();
+  }
 
   return self;
 }());
@@ -780,7 +910,3 @@ var progress = (function() {
 
   return self;
 }());
-
-function getURLParameter(name) {
-  return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
-}

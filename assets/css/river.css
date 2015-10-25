@@ -96,6 +96,33 @@
 .thumbnail {
     padding: 0;
 }
+.helpful {
+	font-size: .8em;
+}
+.reviewText {
+	font-size: 1.2em;
+}
+.reviewPerson {
+	margin-bottom: 10px;
+}
+.btn-hover-success:hover {
+	background-color: #5cb85c;
+	border-color: #4cae4c;
+}
+.btn-hover-warning:hover {
+	background-color: #f0ad4e;
+	border-color: #eea236;
+}
+.edit-buttons, .remove-buttons {
+	margin-right: 5px;
+	padding: 0;
+}
+.edit-buttons {
+	color: black;
+}
+.remove-buttons {
+	color: red;
+}
 
 .thumbnail .caption-full {
     padding: 9px;
