@@ -6,6 +6,17 @@
 	padding-top: 60px;
 }
 
+#loading {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(200, 200, 200, 0.8);
+}
+
 .radio-inline label:not(:last-child) {
 	padding-right: 10px;
 }
@@ -72,7 +83,16 @@
 .allProductStars {
 	width: 10px;
 }
-
+.star-on-png, .star-off-png, .star-half-png {
+  font-size: 1em;
+}
+.bigStar {
+	font-size: 1.5em;
+}
+.rating-text {
+	position: absolute;
+	right: 24px;
+}
 .thumbnail {
     padding: 0;
 }

@@ -15,15 +15,15 @@ var page = (function () {
 
   self.reload  = function() {
     var query = window.location.hash.substr(1);
-    console.log('query: ' + query);
+    //console.log('query: ' + query);
     var page = query.split('/')[1];
     var item = query.split('/')[2];
-    console.log('page: ' + page);
+    //console.log('page: ' + page);
     if (page == 'search') {
-      console.log('search');
+      //console.log('search');
       search.searchAll(item);
     } else if (page == 'product') {
-      console.log('product');
+      //console.log('product');
       if (item == 'add') {
         parseObject.addProduct();
       } else if (item == 'all') {
@@ -31,8 +31,14 @@ var page = (function () {
       } else {
         parseObject.product(item);
       }
-    } else {
-      console.log('main');
+    } else if (page == 'dept') {
+    	if (item) {
+    		parseObject.department(item);
+    	} else{
+    		parseObject.department('all');
+    	};
+    } else{
+      //console.log('main');
       main.load();
     }
   }
@@ -272,7 +278,7 @@ var parseObject = (function () {
         }
       },
       function(callback) {
-      	console.log('New image uploaded with url: ' + parseFile.url());
+      	// console.log('New image uploaded with url: ' + parseFile.url());
         console.log(parseFile);
 
         var imageItem = new ImageObject();
@@ -303,8 +309,6 @@ var parseObject = (function () {
     var cat;
     var data;
     var imageData;
-    var reviews;
-    var rating = 0;
 
     async.series([
       function(callback) {
@@ -346,87 +350,37 @@ var parseObject = (function () {
 	      });
       },
       function(callback) {
-      	var reviewQuery = new Parse.Query(Review);
-    		reviewQuery.equalTo('product', data);
-    		reviewQuery.include("user");
-    		reviewQuery.find({
-		      success: function(results) {
-		      	reviews = results;
-		      	callback();
-		      },
-		      error: function(results, error) {
-		        return callback(error);
-		      }
-		    });
-      },
-      function(callback) {
-      	if (reviews.length !== 0) {
-      		html.find('#reviewsBox').empty();
-      	};
-      	async.forEach(reviews, function(review, callbackForEach) {
-        	console.log(review);
-        	var reviewDom = $('<div>');
-        	reviewDom.load('assets/html/reviewItem.html', function() {
-        		reviewDom.find('#reviewRating').raty({readOnly: true, score: function() {
-        			return review.get('rating');
-        		}}).attr('id', 'reviewRating' + review.id);
-        		if (review.get('user')) {
-        			reviewDom.find('#reviewUser').html(review.get('user').get('fname') + ' ' + review.get('user').get('lname'));
-        		} else{
-        			reviewDom.find('#reviewUser').html('Anonymous');
-        		};
-        		reviewDom.find('#reviewUser').attr('id', 'reviewUser' + review.id);
-        		var today = new Date(); // Todays date
-						var oneDay  = 24*60*60*1000;
-						var daysAgo =Math.floor(Math.abs((today.getTime() - Date.parse(review.get('createdAt'))) / oneDay));
-        		reviewDom.find('#reviewDate').html((daysAgo == 0 ) ? 'Today':(daysAgo + " day" + ((daysAgo == 1) ? '' : '\'s'))).attr('id', 'reviewDate' + review.id);
-        		reviewDom.find('#reviewText').html(review.get('review')).attr('id', 'reviewText' + review.id);
-
-        		rating += review.get('rating');
-
-        		html.find('#reviewsBox').append(reviewDom);
-        		callbackForEach();
-        	});
-        }, function(err) {
-    				if (err) return page.error(err);
-    				if (reviews.length !== 0) {
-    					html.find('#productRating').raty({readOnly: true, score: function() {
-	        			return (rating / reviews.length);
-	        		}});
-	        		html.find('#productRatingText').html(rating / ((reviews.length == 0) ? 1 : reviews.length) + ' Stars');
-    				};
-        		html.find('#reviewCount').html(reviews.length + ' reviews');
-    				callback();
-    		});
-      },
-      function(callback) {
       	html.find('#addReview').load('assets/html/reviewForm.html', function() {
       		var clickCounter = 0;
-      		html.find('#leaveAReviewButton').click(function() {
-      			clickCounter++;
-      			if (!$('#addReview').is(":visible")) {
-	      			$('#addReview').slideDown(800);
-	      			if (clickCounter == 1) {
-		      			$('#star').raty({ 
-							    target: '#ratingHintViewer', 
-							    hints: ['I hate it', 'I don\'t like it', 'I\'ts okay', 'I like it', 'I love it'],
-							    click: function(score) {
-							      $('#star').removeClass('ratingPreClick');
-							    }
-							  });
-		      		}
-		      		$('#leaveAReviewButton').html('Cancel').removeClass('btn-success').addClass('btn-warning');
-						} else {
-							$('#addReview').slideUp(800);
-							$('#leaveAReviewButton').html('Leave a Review').removeClass('btn-warning').addClass('btn-success');
-						}
-						$('#submitReviewForm').submit(function() {
-							submitReview(data);
-							return false;
-						});
-      		});
+      		if (Parse.User.current()) {
+	      		html.find('#leaveAReviewButton').click(function() {
+	      			clickCounter++;
+	      			if (!$('#addReview').is(":visible")) {
+		      			$('#addReview').slideDown(800);
+		      			if (clickCounter == 1) {
+			      			$('#star').raty({ 
+								    target: '#ratingHintViewer', 
+								    hints: ['I hate it', 'I don\'t like it', 'I\'ts okay', 'I like it', 'I love it'],
+								    click: function(score) {
+								      $('#star').removeClass('ratingPreClick');
+								    }
+								  });
+			      		}
+			      		$('#leaveAReviewButton').html('Cancel').removeClass('btn-success').addClass('btn-warning');
+							} else {
+								$('#addReview').slideUp(800);
+								$('#leaveAReviewButton').html('Leave a Review').removeClass('btn-warning').addClass('btn-success');
+							}
+							$('#submitReviewForm').submit(function() {
+								submitReview(data);
+								return false;
+							});
+	      		});
+	      	} else{
+	      		html.find('#leaveAReviewButton').click(function() {loginSignup('Please sign in to leave a review', 'danger');});
+	      	};
       		if (cat) {
-	        	console.log(cat.id);
+	        	// console.log(cat.id);
 	        	productPage({html: html, category: cat.id});
 	        } else{
 	        	productPage({html: html});
@@ -436,6 +390,7 @@ var parseObject = (function () {
       }
     ], function(err) { 
         if (err) return page.error(err);
+        populateReviews(data);
     });
   }
 
@@ -453,20 +408,41 @@ var parseObject = (function () {
     });
   }
 
-  self.allProducts = function() {allProducts();}
-  var allProducts = function() {
+  self.allProducts = function() {department('all');}
+  self.department = function(dept) {department(dept);}
+  var department = function(dept) {
+  	$('#loading').show();
     var html = $('<div>');
     var data;
+    var categoryMaster;
+    var categoryMasterName = 'all';
     async.series([
     	function(callback) {
+    		var query = new Parse.Query(Category);
+    		query.equalTo('searchName', dept);
+    		query.find({
+    			success: function(results) {
+    				categoryMaster = results[0];
+    				callback();
+    			},
+    			error: function(results, error) {
+    				return callback(error);
+    			}
+    		});
+    	},
+    	function(callback) {
     		var query = new Parse.Query(Product);
-				query.exists('objectId');
+    		if (dept !== 'all') {
+    			query.equalTo('category', categoryMaster);
+    			categoryMasterName = categoryMaster.get('searchName');
+    		}
+				query.include('category');
 		    query.find({
 		      success: function(results) {
 		      	data = results;
-		        html.load('assets/html/allProducts.html', function(results) {
+		        //html.load('assets/html/allProducts.html', function(results) {
 		        	callback();
-		        });
+		        //});
 		      },
 		      error: function(error) {
 		        return callback(error);
@@ -498,7 +474,7 @@ var parseObject = (function () {
 			        html2.load('assets/html/allProductsItem.html', function() {
 			          html2.find('#productTitle').attr('href', './#/product/' + row.id).html(row.get('name')).attr('id', 'productTitle' + row.id);
 			          html2.find('#productPrice').html('$' + row.get('price')).attr('id', 'productPrice' + row.id);
-			          html2.find('#productDept').attr('href', './#/dept/' + row.get('category')).html(row.get('category')).attr('id', 'productDept' + row.id);
+			          html2.find('#productDept').attr('href', './#/dept/' + row.get('category').get('searchName')).html(row.get('category').get('searchName')).attr('id', 'productDept' + row.id);
 			          if(imageData) {
 			            html2.find('#productImage').attr('src', imageData.get('image').url()).html(row.get('name')).attr('id', 'productImage' + row.id);
 			          }
@@ -522,7 +498,7 @@ var parseObject = (function () {
 			      	//console.log(rating + '/' + reviews);
 			      	html2.find('#reviewCount').html(reviews + " review" + ((reviews == 1)? '': 's')).attr('id', 'reviewCount' + row.id);
 			      	if (reviews !== 0) {
-			      		html2.find('#productRatingText').html(('<br>' + rating + " star" + ((reviews == 1)? '': 's'))).attr('id', 'productRatingText' + row.id);
+			      		html2.find('#productRatingText').html((rating + " star" + ((reviews == 1)? '': 's'))).attr('id', 'productRatingText' + row.id);
 			      		html2.find('#productRating').raty({readOnly: true, score: function() {
 		        			return rating;
 		        		}}).attr('id', 'productPrice' + row.id);
@@ -530,11 +506,11 @@ var parseObject = (function () {
 		          callbackInnerSeries();
 			      },
 			      function(callbackInnerSeries) {
-		          html.find('#allProductsRow').append(html2);
+		          html/*.find('#allProductsRow')*/.append(html2);
 		          counter ++;
-		          if (counter % 2 == 0) html.find('#allProductsRow').append('<div class="clearfix visible-xs"></div>');
-		          if (counter % 3 == 0) html.find('#allProductsRow').append('<div class="clearfix visible-sm"></div><div class="clearfix visible-md"></div>');
-		          if (counter % 4 == 0) html.find('#allProductsRow').append('<div class="clearfix visible-lg">');
+		          if (counter % 2 == 0) html/*.find('#allProductsRow')*/.append('<div class="clearfix visible-xs"></div>');
+		          if (counter % 3 == 0) html/*.find('#allProductsRow')*/.append('<div class="clearfix visible-sm"></div><div class="clearfix visible-md"></div>');
+		          if (counter % 4 == 0) html/*.find('#allProductsRow')*/.append('<div class="clearfix visible-lg">');
 		          callbackInnerSeries();
 			      }
 			    ], function(err) { 
@@ -548,53 +524,126 @@ var parseObject = (function () {
     	}
     ], function(err) {
     		if (err) return page.error(err);
-    		
-    		productPage({html: html});
+    		productPage({html: html, cat: categoryMasterName});
     });
   }
 
   self.productPage = function(object) {productPage(object);}
   var productPage = function(object) {
-    if ($('#productPageMain').length > 0) {
-      $('#productInnerPage').html(object.html);
-    } else {
-      $('#main').load('assets/html/productPage.html', function() {
-      	parseObject.categories(function(data) {
-      		//console.log(data);
-      		$('#deptList').empty();
-      		$('#deptList').append($('<a>').attr('href', './#/product/all').html('All Departments').addClass('list-group-item'));
-      		data.forEach(function(row) {
-      			console.log(row.get('name'));
-      			$('#deptList').append($('<a>').attr('href', './#/dept/' + row.get('name').toLowerCase()).html(row.get('name')).attr('id', row.id).addClass('list-group-item'));
-      		});
-      	});
-        $('#productInnerPage').html(object.html);
-      });
-    }
-    if (object.cat) {
-    	$('#deptList').find('.active').removeClass('active');
-    	$('#'+object.cat).addClass('active');
-    } else{};
+  	async.series([
+  		function(callback) {
+		    if ($('#productPageMain').length > 0) {
+		      $('#productInnerPage').html(object.html);
+		      $('#loading').hide();
+		      callback();
+		    } else {
+		      $('#main').load('assets/html/productPage.html', function() {
+		      	parseObject.categories(function(data) {
+		      		$('#deptList').empty();
+		      		$('#deptList').append($('<a>').attr('href', './#/dept/all').html('All Departments').attr('id', 'allDepartment').addClass('list-group-item'));
+		      		data.forEach(function(row) {
+		      			$('#deptList').append($('<a>').attr('href', './#/dept/' + row.get('searchName')).html(row.get('name')).attr('id', row.get('searchName')+'Department').addClass('list-group-item'));
+		      		});
+		      		callback();
+		      	});
+		        $('#productInnerPage').html(object.html);
+		        $('#loading').hide();
+		      });
+		    }
+		  }
+		], function(err) {
+    		if (err) return page.error(err);
+    		if (object.cat) {
+		    	$('#deptList').find('.active').removeClass('active');
+		    	$('#'+object.cat+'Department').addClass('active');
+		    }
+    }); 
+  }
+
+  var populateReviews = function(product) {
+  	var reviews;
+    var rating = 0;
+  	async.series([
+      function(callback) {
+      	var reviewQuery = new Parse.Query(Review);
+    		reviewQuery.equalTo('product', product);
+    		reviewQuery.include("user");
+    		reviewQuery.find({
+		      success: function(results) {
+		      	reviews = results;
+		      	callback();
+		      },
+		      error: function(results, error) {
+		        return callback(error);
+		      }
+		    });
+      },
+      function(callback) {
+      	if (reviews.length !== 0) {
+      		$('#reviewsBox').empty();
+      	};
+      	async.forEach(reviews, function(review, callbackForEach) {
+        	//console.log(review);
+        	var reviewDom = $('<div>');
+        	reviewDom.load('assets/html/reviewItem.html', function() {
+        		reviewDom.find('#reviewRating').raty({readOnly: true, score: function() {
+        			return review.get('rating');
+        		}}).attr('id', 'reviewRating' + review.id);
+        		if (review.get('user')) {
+        			reviewDom.find('#reviewUser').html(review.get('user').get('fname') + ' ' + review.get('user').get('lname'));
+        		} else{
+        			reviewDom.find('#reviewUser').html('Anonymous');
+        		};
+        		reviewDom.find('#reviewUser').attr('id', 'reviewUser' + review.id);
+        		var today = new Date(); // Todays date
+						var oneDay  = 24*60*60*1000;
+						var daysAgo =Math.floor(Math.abs((today.getTime() - Date.parse(review.get('createdAt'))) / oneDay));
+        		reviewDom.find('#reviewDate').html((daysAgo == 0 ) ? 'Today':(daysAgo + " day" + ((daysAgo == 1) ? '' : '\'s'))).attr('id', 'reviewDate' + review.id);
+        		reviewDom.find('#reviewText').html(review.get('review')).attr('id', 'reviewText' + review.id);
+
+        		rating += review.get('rating');
+
+        		$('#reviewsBox').append(reviewDom);
+        		callbackForEach();
+        	});
+        }, function(err) {
+    				if (err) return page.error(err);
+    				if (reviews.length !== 0) {
+    					$('#productRating').raty({readOnly: true, score: function() {
+	        			return (rating / reviews.length);
+	        		}});
+	        		$('#productRatingText').html(rating / ((reviews.length == 0) ? 1 : reviews.length) + ' Stars');
+    				};
+        		$('#reviewCount').html(reviews.length + ' reviews');
+    				callback();
+    		});
+      }
+    ], function(err) { 
+        if (err) return page.error(err);
+    });
   }
 
   var submitReview = function(product) {
-  	var title = $('#titleInput').val();
-  	var rating = $('#star').raty('score');
-  	var review = $('#reviewTextArea').val();
-  	var productReview = new Review();
-  	productReview.set('title', title);
-  	productReview.set('rating', rating);
-  	productReview.set('review', review);
-  	productReview.set('product', product);
-  	productReview.set('user', Parse.User.current());
-  	productReview.save(null, {
-      success: function(productItem) {
-        $('#addReview').html('<h1>Thank you</h1>');
-        $('#addReview').slideUp(1500);
-      }, error: function(productItem, error) {
-        return page.error(error);
-      }
-    });
+  	if (Parse.User.current()) {
+	  	var title = $('#titleInput').val();
+	  	var rating = $('#star').raty('score');
+	  	var review = $('#reviewTextArea').val();
+	  	var productReview = new Review();
+	  	productReview.set('title', title);
+	  	productReview.set('rating', rating);
+	  	productReview.set('review', review);
+	  	productReview.set('product', product);
+	  	productReview.set('user', Parse.User.current());
+	  	productReview.save(null, {
+	      success: function(productItem) {
+	        $('#addReview').html('<h1>Thank you</h1>');
+	        $('#addReview').slideUp(1500);
+	        populateReviews(product);
+	      }, error: function(productItem, error) {
+	        return page.error(error);
+	      }
+	    });
+	  };
   }
 
 
@@ -606,7 +655,8 @@ var main = (function() {
   self = {};
 
   self.load = function() {
-    load();
+  	parseObject.allProducts();
+    //load();
   }
 
   var load = function() {
