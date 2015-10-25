@@ -100,7 +100,7 @@ var parseObject = (function () {
   var loginSignupPlain = function() {loginSignup('','');}
   var loginSignup = function(messageToUser, type) {
     bootbox.dialog({
-      message: '</div><div id="loginSignup"></div>',
+      message: '<div id="loginSignup"></div>',
       title: 'Welcome to River',
       buttons: {
         facebook: {
@@ -198,7 +198,6 @@ var parseObject = (function () {
   		async.series([
   			function(callback) {
   				$('#main').load('assets/html/account.html', function() {
-  					$('#loading').hide();
   					callback();
   				});
   			},
@@ -396,6 +395,9 @@ var parseObject = (function () {
 	      });
       },
       function(callback) {
+	      productPage({html: html, cat: cat, callback: callback});
+      },
+      function(callback) {
       	html.find('#addReview').load('assets/html/reviewForm.html', function() {
       		var clickCounter = 0;
       		if (Parse.User.current()) {
@@ -425,12 +427,6 @@ var parseObject = (function () {
 	      	} else{
 	      		html.find('#leaveAReviewButton').click(function() {loginSignup('Please sign in to leave a review', 'danger');});
 	      	};
-      		if (cat) {
-	        	// console.log(cat);
-	        	productPage({html: html, cat: cat});
-	        } else{
-	        	productPage({html: html});
-	        };
 	        callback();
 	      }).hide();
       }
@@ -457,7 +453,6 @@ var parseObject = (function () {
   self.allProducts = function() {department('all');}
   self.department = function(dept) {department(dept);}
   var department = function(dept) {
-  	$('#loading').show();
     var html = $('<div>');
     var data;
     var categoryMaster;
@@ -494,7 +489,10 @@ var parseObject = (function () {
 		        return callback(error);
 		      }
 		    });
-    	}, 
+    	},
+    	function(callback) {
+    		productPage({html: html, cat: categoryMasterName, callback: callback});
+    	},
     	function(callback) {
     		var counter = 0;
     		async.forEach(data, function(row, callbackForEach) {
@@ -571,7 +569,6 @@ var parseObject = (function () {
     	}
     ], function(err) {
     		if (err) return page.error(err);
-    		productPage({html: html, cat: categoryMasterName});
     });
   }
 
@@ -581,7 +578,6 @@ var parseObject = (function () {
   		function(callback) {
 		    if ($('#productPageMain').length > 0) {
 		      $('#productInnerPage').html(object.html);
-		      $('#loading').hide();
 		      callback();
 		    } else {
 		      $('#main').load('assets/html/productPage.html', function() {
@@ -594,7 +590,6 @@ var parseObject = (function () {
 		      		callback();
 		      	});
 		        $('#productInnerPage').html(object.html);
-		        $('#loading').hide();
 		      });
 		    }
 		  }
@@ -604,6 +599,9 @@ var parseObject = (function () {
 		    	$('#deptList').find('.active').removeClass('active');
 		    	$('#'+object.cat+'Department').addClass('active');
 		    }
+		    if (object.callback) {
+		    	object.callback();
+		    };
     }); 
   }
 
@@ -639,7 +637,9 @@ var parseObject = (function () {
       	};
       	async.forEach(reviews, function(review, callbackForEach) {
       		var vote = ((userReviews.indexOf(review.id) == -1) && review.get('user').id != Parse.User.current().id);
+      		console.log(1);
         	makeReviewItem(review, 'reviewsBox', vote, populateReviews);
+        	console.log(2);
 		  		rating += review.get('rating');
 		  		callbackForEach();
         }, function(err) {
@@ -648,7 +648,7 @@ var parseObject = (function () {
     					$('#productRating').raty({readOnly: true, score: function() {
 	        			return (rating / reviews.length);
 	        		}});
-	        		$('#productRatingText').html(rating / ((reviews.length == 0) ? 1 : reviews.length) + ' Stars');
+	        		$('#productRatingText').html(Math.round((rating / ((reviews.length == 0) ? 1 : reviews.length))*100)/100 + ' Stars');
     				};
         		$('#reviewCount').html(reviews.length + ' reviews');
     				callback();
@@ -659,8 +659,10 @@ var parseObject = (function () {
     });
   }
   var makeReviewItem = function(review, parent, vote) {
+  	console.log(3);
   	var reviewDom = $('<div>');
   	reviewDom.load('assets/html/reviewItem.html', function() {
+  		console.log(4);
   		reviewDom.find('#reviewRating').raty({readOnly: true, score: function() {
   			return review.get('rating');
   		}}).attr('id', 'reviewRating' + review.id);
@@ -703,8 +705,10 @@ var parseObject = (function () {
   			reviewDom.find('#deleteReview').remove();
 	  		reviewDom.find('#editReview').remove();
   		};
-  	
+  		
+  		console.log(5);
   		$('#' + parent).append(reviewDom);
+  		console.log(6);
   	});
   }
   var submitReview = function(product) {
@@ -771,8 +775,48 @@ var parseObject = (function () {
   }
   var editReview = function(review, domObject) {
   	console.log(review);
-  	console.log(domObject);
-  	bootbox.alert('editing is not ready');
+  	//console.log(domObject);
+  	bootbox.dialog({
+      message: '<div id="editReviewBox"></div>',
+      title: 'Edit your Review',
+    });
+    $('#editReviewBox').load('assets/html/editReviewForm.html', function() {
+    	$('#editTitleInput').val(review.get('title'));
+    	$('#editReviewTextArea').val(review.get('review'));
+    	$('#editStar').raty({ 
+		    target: '#ratingHintViewer', 
+		    hints: ['I hate it', 'I don\'t like it', 'I\'ts okay', 'I like it', 'I love it'],
+		    click: function(score) {
+		      $('#star').removeClass('ratingPreClick');
+		    },
+		    score: function() {
+		    	return review.get('rating');
+		    }
+		  });
+      $('#editReviewForm').submit(function() {
+      	review.set('title', $('#editTitleInput').val());
+      	review.set('review', $('#editReviewTextArea').val());
+      	review.set('rating', $('#editStar').raty('score'));
+      	review.save(null, {
+      		success: function(review) {
+      			console.log('saved');
+      			$('#reviewTitle' + review.id).html(review.get('title'));
+			    	$('#reviewText' + review.id).html(review.get('review'));
+			    	$('#reviewRating' + review.id).raty({ 
+					    score: function() {
+					    	return review.get('rating');
+					    }
+					  });
+					  bootbox.hideAll();
+      		},
+      		error: function(review, error) {
+      			page.error(error);
+      		}
+      	});
+        return false;
+      });
+      $('#cancelEditReview').click(function(){bootbox.hideAll();});
+    });
   }
   var deleteReview =  function(review) {
   	console.log(review);
@@ -787,7 +831,6 @@ var main = (function() {
   self = {};
 
   self.load = function() {
-  	$('#loading').hide();
   	parseObject.allProducts();
     //load();
   }
