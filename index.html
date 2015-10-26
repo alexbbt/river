@@ -41,34 +41,11 @@
     <link rel="stylesheet" href="assets/css/river.css"/>
   </head>
   <body>
-  <script>
-  // Initialize Parse
-  Parse.initialize("$PARSE_APPLICATION_ID", "$PARSE_JAVASCRIPT_KEY");
-
-      window.fbAsyncInit = function() {
-    Parse.FacebookUtils.init({ // this line replaces FB.init({
-      appId      : '{facebook-app-id}', // Facebook App ID
-      cookie     : true,  // enable cookies to allow Parse to access the session
-      xfbml      : true,  // initialize Facebook social plugins on the page
-      version    : 'v2.4' // point to the latest Facebook Graph API version
-    });
-
-        // Run code after the Facebook SDK is loaded.
-  };
-
-      (function(d, s, id){
-    var js, fjs = d.getElementsByTagName(s)[0];
-    if (d.getElementById(id)) {return;}
-    js = d.createElement(s); js.id = id;
-    js.src = "//connect.facebook.net/en_US/sdk.js";
-    fjs.parentNode.insertBefore(js, fjs);
-  }(document, 'script', 'facebook-jssdk'));
-</script>
     <nav id="navbar" class="navbar navbar-default navbar-alex navbar-fixed-top">
       <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" aria-expanded="false">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#river-navbar-collapse" aria-expanded="false">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
@@ -78,23 +55,7 @@
         </div>
 
         <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-          <ul class="nav navbar-nav">
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle content" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Products <span class="caret"></span></a>
-              <ul class="dropdown-menu">
-                <li><a href="./#/product/all" class="content">All Product</a></li>
-                <li role="separator" class="divider"></li>
-                <li><a href="./#/product/add" class="content">Add Product</a></li>
-              </ul>
-            </li>
-          </ul>
-          <form class="navbar-form navbar-left" role="search">
-            <div class="form-group">
-              <input type="text" name="search" id="search" class="form-control" placeholder="Search Products" required>
-            </div>
-            <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
-          </form>
+        <div class="collapse navbar-collapse" id="river-navbar-collapse">
           <ul class="nav navbar-nav navbar-right">
             <li id="loginField">
             </li>
@@ -104,8 +65,7 @@
           </ul>
         </div><!-- /.navbar-collapse -->
       </div><!-- /.container-fluid -->
-    </nav>
-    
+    </nav>    
     <div id="main">
     </div>
     <div class="container">
@@ -115,8 +75,8 @@
       <!-- Footer -->
       <footer>
           <div class="row">
-              <div class="col-lg-12">
-                  <p>&copy; 1996-2015, River.com, Inc. or its affiliates</p>
+              <div class="col-xs-12">
+                  <p class="pull-right">&copy; 1996-2015, River.com, Inc. or its affiliates</p>
               </div>
           </div>
       </footer>

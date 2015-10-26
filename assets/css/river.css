@@ -26,6 +26,7 @@ p, h4, h5, h6, .content {
 	border: none;
 	/*height: 100px;*/
 }
+
 .btn-facebook {
 	background-color: #3b5998;
 	border-color: #2e4476;
@@ -56,6 +57,9 @@ p, h4, h5, h6, .content {
 @media (min-width: 768px) {
 	.dropdown:hover .dropdown-menu {
 	    display: block;
+	}
+	#departmentMenu {
+		position: fixed;
 	}
 }
 .thumbnail {

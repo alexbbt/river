@@ -71,9 +71,9 @@ var page = (function () {
   }
 
   self.error = function(error) {
-  	console.log(error);
-  	console.log('There was an ERROR: ' + error.message);
-  	console.log(stack);
+  	// console.log(error);
+  	// console.log('There was an ERROR: ' + error.message);
+  	// console.log(stack);
   }
 
   return self;
@@ -126,7 +126,7 @@ var river = (function () {
   var loginSignupPlain = function() {loginSignup('','');}
   var loginSignup = function(messageToUser, type) {
   	FB.getLoginStatus(function(response) {
-  		console.log(response);
+  		// console.log(response);
   	});
     bootbox.dialog({
       message: '<div id="loginSignup"></div>',
@@ -215,7 +215,7 @@ var river = (function () {
   var facebookLoginSignUp = function() {
   	Parse.FacebookUtils.logIn("email", {
 		  success: function(user) {
-		  	console.log(user);
+		  	// console.log(user);
 		  	bootbox.hideAll();
 		    if (!user.existed()) {
 		      console.log("User signed up and logged in through Facebook!");
@@ -716,6 +716,7 @@ var river = (function () {
 		      		data.forEach(function(row) {
 		      			$('#deptList').append($('<a>').attr('href', './#/dept/' + row.get('searchName')).html(row.get('name')).attr('id', row.get('searchName')+'Department').addClass('list-group-item'));
 		      		});
+		      		$('#deptList').append($('<a>').attr('href', './#/product/add').html('Add Product').attr('id', 'addProduct').addClass('list-group-item'));
 		      		callback();
 		      	});
 		        $('#productInnerPage').html(object.html);
@@ -863,9 +864,9 @@ var river = (function () {
   }
   var submitReviewrating = function(review, up) {
   	if (Parse.User.current()) {
-	  	console.log(review);
-	  	console.log(up);
-	  	console.log(review.get('user'));
+	  	// console.log(review);
+	  	// console.log(up);
+	  	// console.log(review.get('user'));
 	  	var user = Parse.User.current();
 	  	if (user.id == review.get('user').id) {
 	  		// console.log('same user');
@@ -923,7 +924,7 @@ var river = (function () {
 	      	review.set('rating', $('#editStar').raty('score'));
 	      	review.save(null, {
 	      		success: function(review) {
-	      			console.log('saved');
+	      			// console.log('saved');
 	      			$('#reviewTitle' + review.id).html(review.get('title'));
 				    	$('#reviewText' + review.id).html(review.get('review'));
 				    	$('#reviewRating' + review.id).raty({ 
@@ -948,7 +949,7 @@ var river = (function () {
   }
   var deleteReview =  function(review) {
   	if (Parse.User.current() && review.get('user').id == Parse.User.current().id) {
-  		console.log(review);
+  		// console.log(review);
 	  	review.set('state', -1);
 	  	review.save();
   	} else{
