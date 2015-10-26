@@ -1,5 +1,8 @@
 body {
 }
+.navbar-brand {
+	font-size: 2em;
+}
 h1, h2, h3, .title {
     font-family: 'Lobster', Georgia, Times, serif;
 }
@@ -22,6 +25,16 @@ p, h4, h5, h6, .content {
 		)!important;*/
 	border: none;
 	/*height: 100px;*/
+}
+.btn-facebook {
+	background-color: #3b5998;
+	border-color: #2e4476;
+	color: white;
+}
+.btn-facebook:hover {
+	background-color: #2e4476;
+	border-color: #25385f;
+	color: white;
 }
 
 .dropdown-menu {

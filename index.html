@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1.0, user-scalable=0">
     <title>River</title>
-    <!--<link rel="shortcut icon" href="">-->
+    <link rel="shortcut icon" href="assets/img/icon.png">
 
     <!--  Fonts  -->
     <link href="http://fonts.googleapis.com/css?family=Lobster" rel="stylesheet" type="text/css">
@@ -24,7 +24,7 @@
      <script src="assets/js/bootbox.min.js"></script>
 
     <!-- Parse make min-->
-    <script src="https://www.parsecdn.com/js/parse-1.6.0.js"></script>
+    <script src="https://www.parsecdn.com/js/parse-latest.js"></script>
 
     <!-- Async make min-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/async/1.4.2/async.js"></script>
@@ -41,6 +41,29 @@
     <link rel="stylesheet" href="assets/css/river.css"/>
   </head>
   <body>
+  <script>
+  // Initialize Parse
+  Parse.initialize("$PARSE_APPLICATION_ID", "$PARSE_JAVASCRIPT_KEY");
+
+      window.fbAsyncInit = function() {
+    Parse.FacebookUtils.init({ // this line replaces FB.init({
+      appId      : '{facebook-app-id}', // Facebook App ID
+      cookie     : true,  // enable cookies to allow Parse to access the session
+      xfbml      : true,  // initialize Facebook social plugins on the page
+      version    : 'v2.4' // point to the latest Facebook Graph API version
+    });
+
+        // Run code after the Facebook SDK is loaded.
+  };
+
+      (function(d, s, id){
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) {return;}
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
+</script>
     <nav id="navbar" class="navbar navbar-default navbar-alex navbar-fixed-top">
       <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->

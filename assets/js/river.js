@@ -1,4 +1,5 @@
 $(document).ready(function() {
+	facebook();
   river.initialize();
   page.reload();
   // $('#navbar').affix({});
@@ -11,6 +12,25 @@ $(document).ready(function() {
   $(window).bind( 'hashchange', function(e) {page.reload();});
 
 });
+
+var facebook = function() {
+	window.fbAsyncInit = function() {
+    Parse.FacebookUtils.init({
+      appId      : '502526549906820',
+      cookie     : true,  // enable cookies to allow Parse to access the session
+      xfbml      : true,  // initialize Facebook social plugins on the page
+      version    : 'v2.4'
+    });
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+}
 
 var page = (function () {
   var self = {};
@@ -89,32 +109,28 @@ var river = (function () {
       $('#loginField').html(a);
     } else{
       //console.log('user not null');
-      if (!Parse.User.current().get('fname')) {
-        var name = Parse.User.current().get('username');
-        } else{
-        var name = Parse.User.current().get('fname')+' '+Parse.User.current().get('lname');
-      };
-      $('#loginField').load('assets/html/loggedinMenu.html', function() {
-      	$('#nameField').html(name);
-      	$('#logoutButon').click(logout);
-      }).addClass('dropdown');
+      Parse.User.current().fetch().then(function() {
+	      if (!Parse.User.current().get('fname')) {
+	        var name = Parse.User.current().get('username');
+	        } else{
+	        var name = Parse.User.current().get('fname')+' '+Parse.User.current().get('lname');
+	      };
+	      $('#loginField').load('assets/html/loggedinMenu.html', function() {
+	      	$('#nameField').html(name);
+	      	$('#logoutButon').click(logout);
+	      }).addClass('dropdown');
+	    });
     };
   }
 
   var loginSignupPlain = function() {loginSignup('','');}
   var loginSignup = function(messageToUser, type) {
+  	FB.getLoginStatus(function(response) {
+  		console.log(response);
+  	});
     bootbox.dialog({
       message: '<div id="loginSignup"></div>',
       title: 'Welcome to River',
-      buttons: {
-        facebook: {
-          label: "Login with Facebook",
-          className: "btn-primary",
-          callback: function() {
-            console.log("Facebook");
-          }
-        },
-      }
     });
     $('#loginSignup').load('assets/html/loginSignup.html', function() {
       if (messageToUser != '') {
@@ -124,6 +140,7 @@ var river = (function () {
       $('#loginSignupForm').change(function() {
         if ($('input:radio[name=loginSignup]:checked').val() == 'login') {
           $('#loginBox').load('assets/html/login.html', function() {
+          	$('#facebookLoginButton').click(facebookLoginSignUp);
             $('#loginForm').submit(function() {
               login();
               return false;
@@ -131,6 +148,7 @@ var river = (function () {
           });
         } else{
           $('#loginBox').load('assets/html/signup.html', function() {
+          	$('#facebookLoginButton').click(facebookLoginSignUp);
             $('#signUpForm').submit(function() {
               signup();
               return false;
@@ -165,7 +183,7 @@ var river = (function () {
         }
       });
     } else{
-      bootbox.alert('passwords dont match');
+    	$('#loginFormOuterDiv').prepend(componants.error(' passwords do not match', 'loginError'));
     };
 
     return false;
@@ -179,12 +197,12 @@ var river = (function () {
       success: function(user) {
         // Do stuff after successful login.
         console.log('user: ' + user);
-        window.location.href = "./";
-        page.reload();
+        //window.location.href = "./";
+        location.reload();
       },
       error: function(user, error) {
-        console.log('user: ' + user + ' error: ' + error);
-        $('#loginFormOuterDiv').prepend(componants.error('User Name or Password does not match', 'loginError'));
+        page.error(error);
+        $('#loginFormOuterDiv').prepend(componants.error(' User Name or Password does not match', 'loginError'));
         $('#username').click(function(){componants.removeID('loginError');});
         $('#password').click(function(){componants.removeID('loginError');});
       }
@@ -194,6 +212,69 @@ var river = (function () {
     Parse.User.logOut();
     window.location.href = "./";
   }
+  var facebookLoginSignUp = function() {
+  	Parse.FacebookUtils.logIn("email", {
+		  success: function(user) {
+		  	console.log(user);
+		  	bootbox.hideAll();
+		    if (!user.existed()) {
+		      console.log("User signed up and logged in through Facebook!");
+		    } else {
+		      console.log("User logged in through Facebook!");
+		    }
+		    FB.api('/me', {fields: 'name, email' }, function(response) {
+				  console.log(response);
+				  var fname;
+				  var lname;
+				  var splitName = response.name.split(' ');
+				  if (splitName.length > 2) {
+				  	fname = splitName[0] + splitName[1];
+				  	for (var i = 2; i < splitName.length; i++) {
+				  		lname += splitName[i];
+				  	};
+				  } else{
+				  	fname = splitName[0];
+				  	lname = splitName[1];
+				  };
+				  user.set("fname", fname);
+				  user.set("lname", lname);
+				  user.set("email", response.email);
+          user.save(null, {
+          	success: function(user) {
+          		location.reload();
+          	},
+          	error: function(user, error) {
+          		page.error(error);
+          	}
+          });
+				});
+		  },
+		  error: function(user, error) {
+		    console.log("User cancelled the Facebook login or did not fully authorize.");
+		  }
+		});
+  }
+  var facebookLink = function() {
+  	if (!Parse.FacebookUtils.isLinked(Parse.User.current())) {
+		  Parse.FacebookUtils.link(Parse.User.current(), "email", {
+		    success: function(user) {
+		      location.reload();
+		    },
+		    error: function(user, error) {
+		      page.error(error);
+		    }
+		  });
+		}
+  }
+  var facebookRemove = function() {
+  	if (Parse.FacebookUtils.isLinked(Parse.User.current())) {
+		  Parse.FacebookUtils.unlink(Parse.User.current(), {
+			  success: function(user) {
+			    location.reload();
+			  }
+			});
+		}
+  }
 
   self.account = function() {account();}
   var account = function() {
@@ -202,6 +283,11 @@ var river = (function () {
   		async.series([
   			function(callback) {
   				$('#main').load('assets/html/account.html', function() {
+  					if (!Parse.FacebookUtils.isLinked(Parse.User.current())) {
+  						$('#facebookLinkButton').click(facebookLink);
+  					} else {
+  						$('#facebookLinkButton').html('Disconnect from Facebook').click(facebookRemove);
+  					};
   					callback();
   				});
   			},
@@ -218,6 +304,28 @@ var river = (function () {
 			        return callback(error);
 			      }
 			    });
+			    Parse.User.current().fetch().then(function(user){
+				    $('#accountUsername').val(Parse.User.current().get('username'));
+				    $('#accountFname').val(Parse.User.current().get('fname'));
+				    $('#accountLname').val(Parse.User.current().get('lname'));
+				    $('#accountEmail').val(Parse.User.current().get('email'));
+				    $('#acccountSettingForm').submit(function() {
+				    	var user = Parse.User.current();
+				    	user.set("username", $('#accountUsername').val());
+				      user.set("email", $('#accountEmail').val());
+				      user.set("fname", $('#accountFname').val());
+				      user.set("lname", $('#accountLname').val());
+				      user.save(null, {
+		          	success: function(user) {
+		          		location.reload();
+		          	},
+		          	error: function(user, error) {
+		          		page.error(error);
+		          	}
+		          });
+				      return false;
+				    });
+				  });
 	      },
 	      function(callback) {
   				async.forEach(reviews, function(review, callbackForEach) {
@@ -661,9 +769,7 @@ var river = (function () {
       		if (Parse.User.current() && Parse.User.current().get('reviewsVotedOn')) {
 	      		vote = ((userReviews.indexOf(review.id) == -1) && review.get('user').id != Parse.User.current().id);
 	      	};
-      		console.log(1);
         	makeReviewItem(review, 'reviewsBox', vote, populateReviews);
-        	console.log(2);
 		  		rating += review.get('rating');
 		  		callbackForEach();
         }, function(err) {
@@ -683,10 +789,8 @@ var river = (function () {
     });
   }
   var makeReviewItem = function(review, parent, vote) {
-  	console.log(3);
   	var reviewDom = $('<div>');
   	reviewDom.load('assets/html/reviewItem.html', function() {
-  		console.log(4);
   		reviewDom.find('#reviewRating').raty({readOnly: true, score: function() {
   			return review.get('rating');
   		}}).attr('id', 'reviewRating' + review.id);
@@ -729,9 +833,7 @@ var river = (function () {
 	  		reviewDom.find('#editReview').remove();
   		};
   		
-  		console.log(5);
   		$('#' + parent).append(reviewDom);
-  		console.log(6);
   	});
   }
   var submitReview = function(product) {
