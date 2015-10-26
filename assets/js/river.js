@@ -1,13 +1,14 @@
 $(document).ready(function() {
-  parseObject.initialize();
+  river.initialize();
   page.reload();
+  // $('#navbar').affix({});
 
   $('#searchForm').submit(function() {
   	var searchString = $('#search').val();
     window.location.href = "./#/search/" + searchString.split(' ').join('-');
     return false;
   });
-  $(window).bind( 'hashchange', function(e) {page.reload(); });
+  $(window).bind( 'hashchange', function(e) {page.reload();});
 
 });
 
@@ -15,6 +16,7 @@ var page = (function () {
   var self = {};
 
   self.reload  = function() {
+  	$(window).scrollTop();
     var query = window.location.hash.substr(1);
     //console.log('query: ' + query);
     var page = query.split('/')[1];
@@ -26,20 +28,22 @@ var page = (function () {
     } else if (page == 'product') {
       //console.log('product');
       if (item == 'add') {
-        parseObject.addProduct();
+        river.addProduct();
       } else if (item == 'all' || item == '') {
-        parseObject.allProducts();
+        river.allProducts();
       } else {
-        parseObject.product(item);
+        river.product(item);
       }
     } else if (page == 'dept') {
     	if (item) {
-    		parseObject.department(item);
+    		river.department(item);
     	} else{
-    		parseObject.department('all');
+    		river.department('all');
     	};
     } else if (page == 'account') {
-    	parseObject.account();
+    	river.account();
+    } else if (page == 'cart') {
+    	river.cart();
     } else{
       //console.log('main');
       main.load();
@@ -55,7 +59,7 @@ var page = (function () {
   return self;
 }());
 
-var parseObject = (function () {
+var river = (function () {
   var self = {};
 
   var Product;
@@ -231,13 +235,30 @@ var parseObject = (function () {
   		loginSignupPlain();
   	};
   }
+  self.cart = function() {cart();}
+  var cart = function() {
+  	if (Parse.User.current()) {
+  		var reviews;
+  		async.series([
+  			function(callback) {
+  				$('#main').load('assets/html/cart.html', function() {
+  					callback();
+  				});
+  			}
+  		], function(err) {
+  				if(err) return page.error(err);
+  		})
+  	} else {
+  		loginSignup('Please sign in to use the shoping cart.');
+  	};
+  }
 
   self.addProduct = function(){addProduct();}
   var addProduct = function() {
     //console.log('add product');
     if (Parse.User.current()) {
       $('#main').load('assets/html/addProduct.html', function() {
-        parseObject.categories(function(data) {
+        river.categories(function(data) {
           data.forEach(function(row) {
             var option = $('<option>').html(row.get('name')).val(row.id);
             $('#categories').append(option);
@@ -519,7 +540,7 @@ var parseObject = (function () {
 			          html2.find('#productImageLink').attr('href', './#/product/' + row.id).attr('id', 'productImageLink' + row.id);
 			          html2.find('#productTitle').attr('href', './#/product/' + row.id).html(row.get('name')).attr('id', 'productTitle' + row.id);
 			          html2.find('#productPrice').html('$' + row.get('price')).attr('id', 'productPrice' + row.id);
-			          html2.find('#productDept').attr('href', './#/dept/' + row.get('category').get('searchName')).html(row.get('category').get('searchName')).attr('id', 'productDept' + row.id);
+			          html2.find('#productDept').attr('href', './#/dept/' + row.get('category').get('searchName')).html(row.get('category').get('name')).attr('id', 'productDept' + row.id);
 			          if(imageData) {
 			            html2.find('#productImage').attr('src', imageData.get('image').url()).html(row.get('name')).attr('id', 'productImage' + row.id);
 			          }
@@ -553,9 +574,9 @@ var parseObject = (function () {
 			      function(callbackInnerSeries) {
 		          html/*.find('#allProductsRow')*/.append(html2);
 		          counter ++;
-		          if (counter % 2 == 0) html/*.find('#allProductsRow')*/.append('<div class="clearfix visible-xs"></div>');
-		          if (counter % 3 == 0) html/*.find('#allProductsRow')*/.append('<div class="clearfix visible-sm"></div><div class="clearfix visible-md"></div>');
-		          if (counter % 4 == 0) html/*.find('#allProductsRow')*/.append('<div class="clearfix visible-lg">');
+		          if (counter % 1 == 0) html/*.find('#allProductsRow')*/.append('<div class="clearfix visible-xs"></div>');
+		          if (counter % 2 == 0) html/*.find('#allProductsRow')*/.append('<div class="clearfix visible-sm"></div><div class="clearfix visible-md"></div>');
+		          if (counter % 3 == 0) html/*.find('#allProductsRow')*/.append('<div class="clearfix visible-lg">');
 		          callbackInnerSeries();
 			      }
 			    ], function(err) { 
@@ -581,7 +602,7 @@ var parseObject = (function () {
 		      callback();
 		    } else {
 		      $('#main').load('assets/html/productPage.html', function() {
-		      	parseObject.categories(function(data) {
+		      	river.categories(function(data) {
 		      		$('#deptList').empty();
 		      		$('#deptList').append($('<a>').attr('href', './#/dept/all').html('All Departments').attr('id', 'allDepartment').addClass('list-group-item'));
 		      		data.forEach(function(row) {
@@ -628,7 +649,7 @@ var parseObject = (function () {
       	if (reviews.length !== 0) {
       		$('#reviewsBox').empty();
       	};
-      	if (Parse.User.current()) {
+      	if (Parse.User.current() && Parse.User.current().get('reviewsVotedOn')) {
       		var userReviewsObject = Parse.User.current().get('reviewsVotedOn');
 	      	var userReviews = [];
 	      	for (var i = 0; i < userReviewsObject.length; i++) {
@@ -636,7 +657,10 @@ var parseObject = (function () {
 	    		};
       	};
       	async.forEach(reviews, function(review, callbackForEach) {
-      		var vote = ((userReviews.indexOf(review.id) == -1) && review.get('user').id != Parse.User.current().id);
+      		vote = true;
+      		if (Parse.User.current() && Parse.User.current().get('reviewsVotedOn')) {
+	      		vote = ((userReviews.indexOf(review.id) == -1) && review.get('user').id != Parse.User.current().id);
+	      	};
       		console.log(1);
         	makeReviewItem(review, 'reviewsBox', vote, populateReviews);
         	console.log(2);
@@ -676,10 +700,10 @@ var parseObject = (function () {
 			var oneDay  = 24*60*60*1000;
 			// console.log(Date.parse(review.get('createdAt')));
 			var daysAgo =Math.floor(Math.abs((today.getTime() - Date.parse(review.get('createdAt'))) / oneDay));
-  		reviewDom.find('#reviewDate').html((daysAgo == 0 ) ? 'Today':(daysAgo + " day" + ((daysAgo == 1) ? '' : '\'s'))).attr('id', 'reviewDate' + review.id);
+  		reviewDom.find('#reviewDate').html((daysAgo == 0 ) ? 'Today':(daysAgo + " day" + ((daysAgo == 1) ? '' : '\'s') + ' ago')).attr('id', 'reviewDate' + review.id);
   		reviewDom.find('#reviewTitle').html(review.get('title')).attr('id', 'reviewTitle' + review.id);
   		reviewDom.find('#reviewText').html(review.get('review')).attr('id', 'reviewText' + review.id);
-  		reviewDom.find('#reviewHelpful').html(( review.get('up') ? review.get('up') : 0 ) + ' out of ' + (( review.get('up') ? review.get('up') : 0 ) + ( review.get('down') ? review.get('down') : 0 )) + ' found this review helpful').attr('id', 'reviewHelpful' + review.id);
+  		reviewDom.find('#reviewHelpful').html(( review.get('up') ? review.get('up') : 0 ) + ' out of ' + (( review.get('up') ? review.get('up') : 0 ) + ( review.get('down') ? review.get('down') : 0 )) + ' found this review helpful. ').attr('id', 'reviewHelpful' + review.id);
 
   		if (vote){
   			reviewDom.find('#reviewHelpfulButtonUp').click(function() {
@@ -689,11 +713,10 @@ var parseObject = (function () {
 	  			submitReviewrating(review, 'down');
 	  		}).attr('id', 'reviewHelpfulButtonDown' + review.id);
   		} else {
-  			reviewDom.find('#reviewHelpfulButtonUp').remove();
-  			reviewDom.find('#reviewHelpfulButtonDown').remove();
+  			reviewDom.find('#thumbButtons').remove();
   		}
 
-  		if (review.get('user').id == Parse.User.current().id) {
+  		if (Parse.User.current() && review.get('user').id == Parse.User.current().id) {
   			reviewDom.find('#deleteReview').click(function() {
   				deleteReview(review);
   				reviewDom.slideUp(500);
@@ -761,7 +784,7 @@ var parseObject = (function () {
 		        // console.log('incremented');
 		        review.fetch({
 		        	success: function(review) {
-		        		$('#reviewHelpful' + review.id).html(review.get('up') + ' out of ' + (review.get('up') + review.get('down')) + ' found this review helpful').attr('id', 'reviewHelpful' + review.id);
+		        		$('#reviewHelpful' + review.id).html(review.get('up') + ' out of ' + (review.get('up') + review.get('down')) + ' found this review helpful. ').attr('id', 'reviewHelpful' + review.id);
 		        	}
 		        })
 		      }, error: function(user, error) {
@@ -774,54 +797,62 @@ var parseObject = (function () {
 	  };
   }
   var editReview = function(review, domObject) {
-  	console.log(review);
-  	//console.log(domObject);
-  	bootbox.dialog({
-      message: '<div id="editReviewBox"></div>',
-      title: 'Edit your Review',
-    });
-    $('#editReviewBox').load('assets/html/editReviewForm.html', function() {
-    	$('#editTitleInput').val(review.get('title'));
-    	$('#editReviewTextArea').val(review.get('review'));
-    	$('#editStar').raty({ 
-		    target: '#ratingHintViewer', 
-		    hints: ['I hate it', 'I don\'t like it', 'I\'ts okay', 'I like it', 'I love it'],
-		    click: function(score) {
-		      $('#star').removeClass('ratingPreClick');
-		    },
-		    score: function() {
-		    	return review.get('rating');
-		    }
-		  });
-      $('#editReviewForm').submit(function() {
-      	review.set('title', $('#editTitleInput').val());
-      	review.set('review', $('#editReviewTextArea').val());
-      	review.set('rating', $('#editStar').raty('score'));
-      	review.save(null, {
-      		success: function(review) {
-      			console.log('saved');
-      			$('#reviewTitle' + review.id).html(review.get('title'));
-			    	$('#reviewText' + review.id).html(review.get('review'));
-			    	$('#reviewRating' + review.id).raty({ 
-					    score: function() {
-					    	return review.get('rating');
-					    }
-					  });
-					  bootbox.hideAll();
-      		},
-      		error: function(review, error) {
-      			page.error(error);
-      		}
-      	});
-        return false;
-      });
-      $('#cancelEditReview').click(function(){bootbox.hideAll();});
-    });
+  	if (Parse.User.current() && review.get('user').id == Parse.User.current().id) {
+  		bootbox.dialog({
+	      message: '<div id="editReviewBox"></div>',
+	      title: 'Edit your Review',
+	    });
+	    $('#editReviewBox').load('assets/html/editReviewForm.html', function() {
+	    	$('#editTitleInput').val(review.get('title'));
+	    	$('#editReviewTextArea').val(review.get('review'));
+	    	$('#editStar').raty({ 
+			    target: '#editRatingHintViewer', 
+			    hints: ['I hate it', 'I don\'t like it', 'I\'ts okay', 'I like it', 'I love it'],
+			    click: function(score) {
+			      $('#editStar').removeClass('ratingPreClick');
+			    },
+			    score: function() {
+			    	return review.get('rating');
+			    }
+			  });
+	      $('#editReviewForm').submit(function() {
+	      	review.set('title', $('#editTitleInput').val());
+	      	review.set('review', $('#editReviewTextArea').val());
+	      	review.set('rating', $('#editStar').raty('score'));
+	      	review.save(null, {
+	      		success: function(review) {
+	      			console.log('saved');
+	      			$('#reviewTitle' + review.id).html(review.get('title'));
+				    	$('#reviewText' + review.id).html(review.get('review'));
+				    	$('#reviewRating' + review.id).raty({ 
+						    score: function() {
+						    	return review.get('rating');
+						    }
+						  });
+						  bootbox.hideAll();
+	      		},
+	      		error: function(review, error) {
+	      			page.error(error);
+	      		}
+	      	});
+	        return false;
+	      });
+	      $('#cancelEditReview').click(function(){bootbox.hideAll();});
+	    });
+  	} else{
+  		loginSignup('Please sign in to edit your reviews', 'warning');
+  	};
+	  	
   }
   var deleteReview =  function(review) {
-  	console.log(review);
-  	review.set('state', -1);
-  	review.save();
+  	if (Parse.User.current() && review.get('user').id == Parse.User.current().id) {
+  		console.log(review);
+	  	review.set('state', -1);
+	  	review.save();
+  	} else{
+  		loginSignup('Please sign in to delete your reviews', 'danger');
+  	};
+  	
   }
 
   return self;
@@ -831,18 +862,11 @@ var main = (function() {
   self = {};
 
   self.load = function() {
-  	parseObject.allProducts();
-    //load();
+  	river.allProducts();
+    load();
   }
 
   var load = function() {
-    var title = $('<h1>').attr('id', 'title').html('Featured Products');
-    var p1 = $('<p>').html('Contents ...');
-    var p2a = $('<a>').addClass('btn btn-primary btn-lg').html('Learn more');
-    var p2 = $('<p>').append(p2a);
-    var container = $('<div>').addClass('container').append(title, p1, p2);
-    var jumbotron = $('<div>').addClass('jumbotron').append(container);
-    $('#main').html(jumbotron);
   }
 
   return self;

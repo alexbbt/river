@@ -8,9 +8,16 @@
     <title>River</title>
     <!--<link rel="shortcut icon" href="">-->
 
+    <!--  Fonts  -->
+    <link href="http://fonts.googleapis.com/css?family=Lobster" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Cabin" rel="stylesheet" type="text/css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+
+
+
     <!-- jQuery, Bootstrap  make min-->
     <script src="https://code.jquery.com/jquery.js"></script>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/bootstrap.css" rel="stylesheet" type="text/css" />
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.js"></script>
 
     <!-- Bootbox -->
@@ -23,7 +30,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/async/1.4.2/async.js"></script>
 
     <!-- Raty make min-->    
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/raty/2.7.0/jquery.raty.css" rel="stylesheet" type="text/css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/raty/2.7.0/jquery.raty.js"></script>
 
@@ -35,7 +41,7 @@
     <link rel="stylesheet" href="assets/css/river.css"/>
   </head>
   <body>
-    <nav class="navbar navbar-default navbar-fixed-top">
+    <nav id="navbar" class="navbar navbar-default navbar-alex navbar-fixed-top">
       <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
@@ -45,18 +51,18 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="./">River</a>
+          <a class="navbar-brand title" href="./">River</a>
         </div>
 
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav">
             <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Products <span class="caret"></span></a>
+              <a href="#" class="dropdown-toggle content" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Products <span class="caret"></span></a>
               <ul class="dropdown-menu">
-                <li><a href="./#/product/all">All Product</a></li>
+                <li><a href="./#/product/all" class="content">All Product</a></li>
                 <li role="separator" class="divider"></li>
-                <li><a href="./#/product/add">Add Product</a></li>
+                <li><a href="./#/product/add" class="content">Add Product</a></li>
               </ul>
             </li>
           </ul>
@@ -70,7 +76,7 @@
             <li id="loginField">
             </li>
             <li>
-              <a href="#"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span></a>
+              <a href="./#/cart"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span></a>
             </li>
           </ul>
         </div><!-- /.navbar-collapse -->
