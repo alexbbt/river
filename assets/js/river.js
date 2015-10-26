@@ -163,9 +163,11 @@ var river = (function () {
     console.log($('#password').val() === $('#confirmPassword').val());
     if ($('#password').val() === $('#confirmPassword').val()) {
       var user = new Parse.User();
-      user.set("username", $('#username').val());
+      var username = $('#username').val();
+      user.set("username", username.toLowerCase());
       user.set("password", $('#password').val());
-      user.set("email", $('#email').val());
+    	var email = $('#email').val();
+      user.set("email", email.toLowerCase());
       user.set("fname", $('#fname').val());
       user.set("lname", $('#lname').val());
         
@@ -189,10 +191,10 @@ var river = (function () {
     return false;
   }
   var login = function() {
-    var user = $('#username').val();
+    var username = $('#username').val();
+    var user = username.toLowerCase();
     var pass = $('#password').val();
-    var email = $('#email').val();
-      
+    
     Parse.User.logIn(user, pass, {
       success: function(user) {
         // Do stuff after successful login.
