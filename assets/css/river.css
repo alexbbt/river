@@ -58,9 +58,6 @@ p, h4, h5, h6, .content {
 	.dropdown:hover .dropdown-menu {
 	    display: block;
 	}
-	#departmentMenu {
-		position: fixed;
-	}
 }
 .thumbnail {
 	border: none;
