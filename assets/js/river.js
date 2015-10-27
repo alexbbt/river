@@ -807,10 +807,10 @@ var river = (function () {
 			var oneDay  = 24*60*60*1000;
 			// console.log(Date.parse(review.get('createdAt')));
 			var daysAgo =Math.floor(Math.abs((today.getTime() - Date.parse(review.get('createdAt'))) / oneDay));
-  		reviewDom.find('#reviewDate').html((daysAgo == 0 ) ? 'Today':(daysAgo + " day" + ((daysAgo == 1) ? '' : '\'s') + ' ago')).attr('id', 'reviewDate' + review.id);
-  		reviewDom.find('#reviewTitle').html(review.get('title')).attr('id', 'reviewTitle' + review.id);
-  		reviewDom.find('#reviewText').html(review.get('review')).attr('id', 'reviewText' + review.id);
-  		reviewDom.find('#reviewHelpful').html(( review.get('up') ? review.get('up') : 0 ) + ' out of ' + (( review.get('up') ? review.get('up') : 0 ) + ( review.get('down') ? review.get('down') : 0 )) + ' found this review helpful. ').attr('id', 'reviewHelpful' + review.id);
+  		reviewDom.find('#reviewDate').text((daysAgo == 0 ) ? 'Today':(daysAgo + " day" + ((daysAgo == 1) ? '' : '\'s') + ' ago')).attr('id', 'reviewDate' + review.id);
+  		reviewDom.find('#reviewTitle').text(review.get('title')).attr('id', 'reviewTitle' + review.id);
+  		reviewDom.find('#reviewText').text(review.get('review')).attr('id', 'reviewText' + review.id);
+  		reviewDom.find('#reviewHelpful').text(( review.get('up') ? review.get('up') : 0 ) + ' out of ' + (( review.get('up') ? review.get('up') : 0 ) + ( review.get('down') ? review.get('down') : 0 )) + ' found this review helpful. ').attr('id', 'reviewHelpful' + review.id);
 
   		if (vote){
   			reviewDom.find('#reviewHelpfulButtonUp').click(function() {
