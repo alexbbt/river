@@ -4,7 +4,9 @@
 Nope.
 
 #### Did you complete any advanced extensions to this challenge? If so, what?
-Yes, All of (Authentication and Authorization), and I sort of used a Templating Engine, I used the jQuery.load() function a lot to load seperate html files.
+Yes, All of (Authentication and Authorization),  also facebook login (including tying your facebook to an exisitng account, and removing it).
+
+and I sort of used a Templating Engine, I used the jQuery.load() function a lot to load seperate html files.
 
 #### Approximately how many hours did it take you to complete this challenge?
 A lot, liek way to many. I lost count after like 10.
