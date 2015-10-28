@@ -13,6 +13,7 @@ Parse.Cloud.define("averageRating", function(request, response) {
   	var Review = Parse.Object.extend("Review");
 	  var reviewQuery = new Parse.Query(Review);
 	  reviewQuery.equalTo('product', products[0]);
+    reviewQuery.equalTo('state', 1);
 	  reviewQuery.find().then(function(results) {
 	  	var total = results.length;
 	    var sum = 0;
@@ -20,7 +21,7 @@ Parse.Cloud.define("averageRating", function(request, response) {
 	      sum += results[i].get("rating");
 	    }
 	    if (total == 0) total = 1;
-	    response.success({average:(sum / total), total: (total), productID: request.params.productID});
+	    response.success({average:(Math.round((sum / total)*100)/100), total: (total), productID: request.params.productID});
 	  }, function(error) {
 	  	response.error("product lookup failed " + request.params.productID + " " + error.message);
 	  });
