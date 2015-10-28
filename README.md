@@ -14,16 +14,16 @@ A lot, liek way to many. I lost count after like 10.
 I did not, but the people, I helped, kept using the same id for multiple DOM elements on the page, which caused a lot of problems.
 
 
-#### Final Website
+#### Final Website:
 My finished site can be found at:
 [/alexbbt/info343/river/](http://students.washington.edu/alexbbt/info343/river/)
 
 
-#### Other cool thing I made
+#### Other cool thing I made:
 Also I made a cool page to view all my projects (Which uses PHP to update **Dynamicly** as I add more projects):
 [/alexbbt/info343/](http://students.washington.edu/alexbbt/info343/)
 
-#### Crude Templating Engine
+#### Crude Templating Engine:
 Third, I rolled my own crud templating engine, 
 I used this a lot to dinamicly create the page as the user navigates.
 The elements of can be viewed here:
