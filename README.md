@@ -17,7 +17,7 @@ I did not, but the people, I helped, kept using the same id for multiple DOM ele
 My finished site can be found at:
 [/alexbbt/info343/river/](http://students.washington.edu/alexbbt/info343/river/)
 
-Also I made a cool page to view all my projects (Which uses PHP to update **Dynamicly* as I add more projects):
+Also I made a cool page to view all my projects (Which uses PHP to update **Dynamicly** as I add more projects):
 [/alexbbt/info343/](http://students.washington.edu/alexbbt/info343/)
 
 Third, I rolled my own crud templating engine, 
