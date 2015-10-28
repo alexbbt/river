@@ -116,7 +116,7 @@ var river = (function () {
 	        var name = Parse.User.current().get('fname')+' '+Parse.User.current().get('lname');
 	      };
 	      $('#loginField').load('assets/html/loggedinMenu.html', function() {
-	      	$('#nameField').html(name);
+	      	$('#nameField').text(name);
 	      	$('#logoutButon').click(logout);
 	      }).addClass('dropdown');
 	    });
@@ -288,7 +288,7 @@ var river = (function () {
   					if (!Parse.FacebookUtils.isLinked(Parse.User.current())) {
   						$('#facebookLinkButton').click(facebookLink);
   					} else {
-  						$('#facebookLinkButton').html('Disconnect from Facebook').click(facebookRemove);
+  						$('#facebookLinkButton').text('Disconnect from Facebook').click(facebookRemove);
   					};
   					callback();
   				});
@@ -370,7 +370,7 @@ var river = (function () {
       $('#main').load('assets/html/addProduct.html', function() {
         river.categories(function(data) {
           data.forEach(function(row) {
-            var option = $('<option>').html(row.get('name')).val(row.id);
+            var option = $('<option>').text(row.get('name')).val(row.id);
             $('#categories').append(option);
           });
         });
@@ -515,9 +515,9 @@ var river = (function () {
       },
       function(callback) {
         html.load('assets/html/product.html', function() {
-	        html.find('#productTitle').html(data.get('name'));
-	        html.find('#productDescription').html(data.get('description'));
-	        html.find('#productPrice').html('$' + data.get('price'));
+	        html.find('#productTitle').text(data.get('name'));
+	        html.find('#productDescription').text(data.get('description'));
+	        html.find('#productPrice').text('$' + data.get('price'));
 	        cat = data.get('category').get('searchName');
 	        if(imageData) {
 	          html.find('#productImage').attr('src', imageData.get('image').url());
@@ -545,10 +545,10 @@ var river = (function () {
 								    }
 								  });
 			      		}
-			      		$('#leaveAReviewButton').html('Cancel').removeClass('btn-success').addClass('btn-warning');
+			      		$('#leaveAReviewButton').text('Cancel').removeClass('btn-success').addClass('btn-warning');
 							} else {
 								$('#addReview').slideUp(800);
-								$('#leaveAReviewButton').html('Leave a Review').removeClass('btn-warning').addClass('btn-success');
+								$('#leaveAReviewButton').text('Leave a Review').removeClass('btn-warning').addClass('btn-success');
 							}
 							$('#submitReviewForm').submit(function() {
 								submitReview(data);
@@ -648,11 +648,11 @@ var river = (function () {
 			      function(callbackInnerSeries) {
 			        html2.load('assets/html/allProductsItem.html', function() {
 			          html2.find('#productImageLink').attr('href', './#/product/' + row.id).attr('id', 'productImageLink' + row.id);
-			          html2.find('#productTitle').attr('href', './#/product/' + row.id).html(row.get('name')).attr('id', 'productTitle' + row.id);
-			          html2.find('#productPrice').html('$' + row.get('price')).attr('id', 'productPrice' + row.id);
-			          html2.find('#productDept').attr('href', './#/dept/' + row.get('category').get('searchName')).html(row.get('category').get('name')).attr('id', 'productDept' + row.id);
+			          html2.find('#productTitle').attr('href', './#/product/' + row.id).text(row.get('name')).attr('id', 'productTitle' + row.id);
+			          html2.find('#productPrice').text('$' + row.get('price')).attr('id', 'productPrice' + row.id);
+			          html2.find('#productDept').attr('href', './#/dept/' + row.get('category').get('searchName')).text(row.get('category').get('name')).attr('id', 'productDept' + row.id);
 			          if(imageData) {
-			            html2.find('#productImage').attr('src', imageData.get('image').url()).html(row.get('name')).attr('id', 'productImage' + row.id);
+			            html2.find('#productImage').attr('src', imageData.get('image').url()).text(row.get('name')).attr('id', 'productImage' + row.id);
 			          }
 			          callbackInnerSeries();
 			        });
@@ -672,9 +672,9 @@ var river = (function () {
 			      }, 
 			      function(callbackInnerSeries) {
 			      	//console.log(rating + '/' + reviews);
-			      	html2.find('#reviewCount').html(reviews + " review" + ((reviews == 1)? '': 's')).attr('id', 'reviewCount' + row.id);
+			      	html2.find('#reviewCount').text(reviews + " review" + ((reviews == 1)? '': 's')).attr('id', 'reviewCount' + row.id);
 			      	if (reviews !== 0) {
-			      		html2.find('#productRatingText').html((rating + " star" + ((reviews == 1)? '': 's'))).attr('id', 'productRatingText' + row.id);
+			      		html2.find('#productRatingText').text((rating + " star" + ((reviews == 1)? '': 's'))).attr('id', 'productRatingText' + row.id);
 			      		html2.find('#productRating').raty({readOnly: true, score: function() {
 		        			return rating;
 		        		}}).attr('id', 'productPrice' + row.id);
@@ -714,11 +714,11 @@ var river = (function () {
 		      $('#main').load('assets/html/productPage.html', function() {
 		      	river.categories(function(data) {
 		      		$('#deptList').empty();
-		      		$('#deptList').append($('<a>').attr('href', './#/dept/all').html('All Departments').attr('id', 'allDepartment').addClass('list-group-item'));
+		      		$('#deptList').append($('<a>').attr('href', './#/dept/all').text('All Departments').attr('id', 'allDepartment').addClass('list-group-item'));
 		      		data.forEach(function(row) {
-		      			$('#deptList').append($('<a>').attr('href', './#/dept/' + row.get('searchName')).html(row.get('name')).attr('id', row.get('searchName')+'Department').addClass('list-group-item'));
+		      			$('#deptList').append($('<a>').attr('href', './#/dept/' + row.get('searchName')).text(row.get('name')).attr('id', row.get('searchName')+'Department').addClass('list-group-item'));
 		      		});
-		      		$('#deptList').append($('<a>').attr('href', './#/product/add').html('Add Product').attr('id', 'addProduct').addClass('list-group-item'));
+		      		$('#deptList').append($('<a>').attr('href', './#/product/add').text('Add Product').attr('id', 'addProduct').addClass('list-group-item'));
 		      		callback();
 		      	});
 		        $('#productInnerPage').html(object.html);
@@ -781,9 +781,9 @@ var river = (function () {
     					$('#productRating').raty({readOnly: true, score: function() {
 	        			return (rating / reviews.length);
 	        		}});
-	        		$('#productRatingText').html(Math.round((rating / ((reviews.length == 0) ? 1 : reviews.length))*100)/100 + ' Stars');
+	        		$('#productRatingText').text(Math.round((rating / ((reviews.length == 0) ? 1 : reviews.length))*100)/100 + ' Stars');
     				};
-        		$('#reviewCount').html(reviews.length + ' reviews');
+        		$('#reviewCount').text(reviews.length + ' reviews');
     				callback();
     		});
       }
@@ -798,9 +798,9 @@ var river = (function () {
   			return review.get('rating');
   		}}).attr('id', 'reviewRating' + review.id);
   		if (review.get('user')) {
-  			reviewDom.find('#reviewUser').html(review.get('user').get('fname') + ' ' + review.get('user').get('lname'));
+  			reviewDom.find('#reviewUser').text(review.get('user').get('fname') + ' ' + review.get('user').get('lname'));
   		} else{
-  			reviewDom.find('#reviewUser').html('Anonymous');
+  			reviewDom.find('#reviewUser').text('Anonymous');
   		};
   		reviewDom.find('#reviewUser').attr('id', 'reviewUser' + review.id);
   		var today = new Date(); // Todays date
@@ -889,7 +889,7 @@ var river = (function () {
 		        // console.log('incremented');
 		        review.fetch({
 		        	success: function(review) {
-		        		$('#reviewHelpful' + review.id).html(review.get('up') + ' out of ' + (review.get('up') + review.get('down')) + ' found this review helpful. ').attr('id', 'reviewHelpful' + review.id);
+		        		$('#reviewHelpful' + review.id).text(review.get('up') + ' out of ' + (review.get('up') + review.get('down')) + ' found this review helpful. ').attr('id', 'reviewHelpful' + review.id);
 		        	}
 		        })
 		      }, error: function(user, error) {
@@ -927,8 +927,8 @@ var river = (function () {
 	      	review.save(null, {
 	      		success: function(review) {
 	      			// console.log('saved');
-	      			$('#reviewTitle' + review.id).html(review.get('title'));
-				    	$('#reviewText' + review.id).html(review.get('review'));
+	      			$('#reviewTitle' + review.id).text(review.get('title'));
+				    	$('#reviewText' + review.id).text(review.get('review'));
 				    	$('#reviewRating' + review.id).raty({ 
 						    score: function() {
 						    	return review.get('rating');
@@ -996,7 +996,7 @@ var componants = (function() {
 
   self.error = function(message, id) {
     var errorIcon = $('<span>').addClass('glyphicon glyphicon-exclamation-sign').attr('aria-hidden', 'true');
-    var errorIconSR = $('<span>').addClass('sr-only').html('Error:');
+    var errorIconSR = $('<span>').addClass('sr-only').text('Error:');
     return $('<div>').append(errorIcon,errorIconSR,message).addClass('alert alert-danger').attr('role', 'alert').attr('id', id);
   }
 
@@ -1077,7 +1077,7 @@ var progress = (function() {
 
   var update = function(percent) {
     item.attr('aria-valuenow', percent).css('width', percent + '%');
-    sr.html(percent + '% Complete');
+    sr.text(percent + '% Complete');
   }
 
   return self;
