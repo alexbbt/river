@@ -1,17 +1,17 @@
 # River
 
-#### Did you receive help from any other sources (classmates, etc.)? If so, please list who.
+##### Did you receive help from any other sources (classmates, etc.)? If so, please list who.
 Nope.
 
-#### Did you complete any advanced extensions to this challenge? If so, what?
+##### Did you complete any advanced extensions to this challenge? If so, what?
 Yes, All of (Authentication and Authorization),  also facebook login (including tying your facebook to an exisitng account, and removing it).
 
-and I sort of used a Templating Engine, I used the jQuery.load() function a lot to load seperate html files.
+and I sort of used a Templating Engine, I used the `jQuery.load()` function a lot to load seperate html files.
 
-#### Approximately how many hours did it take you to complete this challenge?
+##### Approximately how many hours did it take you to complete this challenge?
 A lot, liek way to many. I lost count after like 10.
 
-#### Did you encounter any problems in this challenge we should warn students about in the future? How can we make the challenge better?
+##### Did you encounter any problems in this challenge we should warn students about in the future? How can we make the challenge better?
 I did not, but the people, I helped, kept using the same id for multiple DOM elements on the page, which caused a lot of problems.
 
 My finished site can be found at:
